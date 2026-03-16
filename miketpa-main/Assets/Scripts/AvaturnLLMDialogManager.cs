@@ -22,9 +22,9 @@ public enum EndPoint
 
 
 /*
-* La classe LLMDialogManager permet de centraliser les fonctionnalités liés à l'aspect conversationnel de l'agent en Full Audio en utilisant un LLM hébergé sur un serveur distant. 
-* ATTENTION : pour faire fonctionner le plugin Whisper de Macoron, il faut ajouter les modèles dans le répertoire 
-* StreamingAssets. Allez voir les pages dédiées de ces modules pour plus d'explications. Ils ne sont pas fournis par défaut car ils prennent
+* La classe LLMDialogManager permet de centraliser les fonctionnalitï¿½s liï¿½s ï¿½ l'aspect conversationnel de l'agent en Full Audio en utilisant un LLM hï¿½bergï¿½ sur un serveur distant. 
+* ATTENTION : pour faire fonctionner le plugin Whisper de Macoron, il faut ajouter les modï¿½les dans le rï¿½pertoire 
+* StreamingAssets. Allez voir les pages dï¿½diï¿½es de ces modules pour plus d'explications. Ils ne sont pas fournis par dï¿½faut car ils prennent
 * trop de place.
 */
 public class AvaturnLLMDialogManager : MonoBehaviour
@@ -81,6 +81,7 @@ public class AvaturnLLMDialogManager : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        computationalModel.SetMotivationalProfile(userProfile);
         anim = this.gameObject.GetComponent<Animator>();
         InformationDisplay("");
         Text textp = textPanel.transform.GetComponentInChildren<Text>().GetComponent<Text>();
@@ -352,6 +353,7 @@ public class AvaturnLLMDialogManager : MonoBehaviour
 
     private void SendToChat(JsonValue conversationList)
     {
+        systemContent.StringValue = BuildPrompt();
         if (conversationList.ArrayValues.Count == 0)
             return;
         JsonValue fullConv = new JsonValue(JsonType.Array);
@@ -360,7 +362,7 @@ public class AvaturnLLMDialogManager : MonoBehaviour
         systemRole.StringValue = "system";
         JsonValue systemContent = new JsonValue(JsonType.String);
         systemContent.StringValue = Regex.Replace(Regex.Replace(preprompt, "[\"\']", ""), "\\s", " ");
-        //systemContent.StringValue = "Tu t'appelles John et tu réponds avec un niveau de patience qui va de 1, très patient, à 5, très impatient. Le niveau de patience actuelle est égale à :" +computationalModel.getEmotion();
+        //systemContent.StringValue = "Tu t'appelles John et tu rï¿½ponds avec un niveau de patience qui va de 1, trï¿½s patient, ï¿½ 5, trï¿½s impatient. Le niveau de patience actuelle est ï¿½gale ï¿½ :" +computationalModel.getEmotion();
         systemTurn.ObjectValues.Add("role", systemRole);
         systemTurn.ObjectValues.Add("content", systemContent);
         fullConv.ArrayValues.Add(systemTurn);
@@ -385,6 +387,22 @@ public class AvaturnLLMDialogManager : MonoBehaviour
         StartCoroutine(ChatRequest(urlOllama + endPointS, data.ToJsonString()));
     }
 
+    private string BuildPrompt()
+    {
+        string basePrompt = preprompt;
+
+        if (computationalModel.UserProfile == ComputationalModel.MotivationalProfile.Promotion)
+        {
+            basePrompt += " Tu encourages l'utilisateur Ã  atteindre ses objectifs, amÃ©liorer sa performance et explorer de nouvelles possibilitÃ©s.";
+        }
+        else
+        {
+            basePrompt += " Tu aides l'utilisateur Ã  Ã©viter les risques, prÃ©server sa santÃ© et prÃ©venir les problÃ¨mes.";
+        }
+
+        return basePrompt;
+    }
+
     private void UserAnalysis(String content)
     {
 
@@ -393,7 +411,7 @@ public class AvaturnLLMDialogManager : MonoBehaviour
         JsonValue systemRole = new JsonValue(JsonType.String);
         systemRole.StringValue = "system";
         JsonValue systemContent = new JsonValue(JsonType.String);
-        systemContent.StringValue = "Tu es un système d'analyse des émotions. Quand je te parle tu réponds une valeur entière entre 0 et 100 d'intensité émotionnelle que tu détectes dans ma phrase. Tu ne dis rien d'autre que la valeur. Tu ne dis pas un mot, juste la valeur numérique, comme une machine.";
+        systemContent.StringValue = "Tu es un systï¿½me d'analyse des ï¿½motions. Quand je te parle tu rï¿½ponds une valeur entiï¿½re entre 0 et 100 d'intensitï¿½ ï¿½motionnelle que tu dï¿½tectes dans ma phrase. Tu ne dis rien d'autre que la valeur. Tu ne dis pas un mot, juste la valeur numï¿½rique, comme une machine.";
         systemTurn.ObjectValues.Add("role", systemRole);
         systemTurn.ObjectValues.Add("content", systemContent);
         fullConv.ArrayValues.Add(systemTurn);
@@ -432,7 +450,7 @@ public class AvaturnLLMDialogManager : MonoBehaviour
         JsonValue systemRole = new JsonValue(JsonType.String);
         systemRole.StringValue = "system";
         JsonValue systemContent = new JsonValue(JsonType.String);
-        systemContent.StringValue = "Tu es un système d'analyse des émotions. Quand je te parle tu réponds une valeur entière entre 0 et 100 d'intensité émotionnelle que tu détectes dans ma phrase. Tu ne dis rien d'autre que la valeur. Tu ne dis pas un mot, juste la valeur numérique, comme une machine.";
+        systemContent.StringValue = "Tu es un systï¿½me d'analyse des ï¿½motions. Quand je te parle tu rï¿½ponds une valeur entiï¿½re entre 0 et 100 d'intensitï¿½ ï¿½motionnelle que tu dï¿½tectes dans ma phrase. Tu ne dis rien d'autre que la valeur. Tu ne dis pas un mot, juste la valeur numï¿½rique, comme une machine.";
         systemTurn.ObjectValues.Add("role", systemRole);
         systemTurn.ObjectValues.Add("content", systemContent);
         fullConv.ArrayValues.Add(systemTurn);
@@ -466,13 +484,13 @@ public class AvaturnLLMDialogManager : MonoBehaviour
 
 
     /*
-     * Cette méthode permet de jouer un fichier audio depuis le répertoire Resources/Sounds dont le nom est de la forme <entier>.mp3 
+     * Cette mï¿½thode permet de jouer un fichier audio depuis le rï¿½pertoire Resources/Sounds dont le nom est de la forme <entier>.mp3 
      */
     public void PlayAudio(int a)
     {
         try
         {
-            //Charge un fichier audio depuis le répertoire Resources
+            //Charge un fichier audio depuis le rï¿½pertoire Resources
             AudioClip music = (AudioClip)Resources.Load("Sounds/" + a);
             audioSource.PlayOneShot(music, volume);
         }
@@ -508,8 +526,8 @@ public class AvaturnLLMDialogManager : MonoBehaviour
 
 
     /*
-     * Cette méthode permet de demander à piperTTS de générer un audio, puis de le jouer, à partir du texte
-     * piperTTS server doit donc être lancé sur la machine.
+     * Cette mï¿½thode permet de demander ï¿½ piperTTS de gï¿½nï¿½rer un audio, puis de le jouer, ï¿½ partir du texte
+     * piperTTS server doit donc ï¿½tre lancï¿½ sur la machine.
      */
     public void PlayAudio(string text)
     {
@@ -531,7 +549,7 @@ public class AvaturnLLMDialogManager : MonoBehaviour
 
 
     /*
-     * Cette méthode affiche du texte dans le panneau d'affichage à gauche de l'UI
+     * Cette mï¿½thode affiche du texte dans le panneau d'affichage ï¿½ gauche de l'UI
      */
     public void InformationDisplay(string s)
     {
@@ -541,7 +559,7 @@ public class AvaturnLLMDialogManager : MonoBehaviour
 
     }
     /*
-     * Cette méthode affiche le texte de la question dans la partie basse de l'UI
+     * Cette mï¿½thode affiche le texte de la question dans la partie basse de l'UI
      */
     public void DisplayQuestion(string s)
     {
@@ -557,7 +575,7 @@ public class AvaturnLLMDialogManager : MonoBehaviour
 
 
     /*
-     * Cette méthode permet de faire jouer des AUs à l'agent
+     * Cette mï¿½thode permet de faire jouer des AUs ï¿½ l'agent
      */
     public void DisplayAUs(int[] aus, int[] intensities, float duration)
     {
@@ -565,13 +583,33 @@ public class AvaturnLLMDialogManager : MonoBehaviour
     }
 
     /*
-    * Exemple de fonction déclenchant une expression émotionnelle
-    * intensity_factor devrait être entre 0 et 1
+    * Exemple de fonction dï¿½clenchant une expression ï¿½motionnelle
+    * intensity_factor devrait ï¿½tre entre 0 et 1
     */
     public void Doubt(float intensity_factor, float duration)
     {
         DisplayAUs(new int[] { 6, 4, 14 }, new int[] { (int)(intensity_factor * 100), (int)(intensity_factor * 80), (int)(intensity_factor * 80) }, duration);
     }
 
+    public ComputationalModel.MotivationalProfile userProfile;
+
+    private void DeterminePosture()
+{
+    if (UserProfile == MotivationalProfile.Promotion)
+    {
+        if (GoalRelevance > 0.6f)
+            CurrentPosture = PostureType.Enthusiastic;
+        else
+            CurrentPosture = PostureType.Neutral;
+    }
+
+    else if (UserProfile == MotivationalProfile.Prevention)
+    {
+        if (Complexity > 0.6f)
+            CurrentPosture = PostureType.Pedagogical;
+        else
+            CurrentPosture = PostureType.Empathetic;
+    }
+}
 
 }

@@ -154,75 +154,174 @@ namespace Assets.Scripts
 
         // ---------------------------------------------------------------
         //  CONSTRUCTION DU PROMPT SYSTEM (LLM)
+        //
+        //  Architecture en trois couches séparées :
+        //    1. Persona de base  →  champ `preprompt` dans l'Inspector Unity
+        //                           (voir PREPROMPT_BASE.txt — copier/coller)
+        //    2. Cadrage VI1      →  GetFramingInstruction()  (Promotion / Prévention)
+        //    3. Complexité VI2   →  GetComplexityInstruction() (Novice / Intermédiaire / Expert)
+        //  Les couches 2 et 3 sont injectées dynamiquement à chaque appel LLM.
         // ---------------------------------------------------------------
 
         /// <summary>
-        /// Génère les instructions dynamiques à injecter dans le system prompt du LLM.
-        /// Encode VI1 (cadrage motivationnel) et VI2 (complexité discursive).
+        /// Génère le bloc d'instructions dynamiques à concaténer au preprompt de base.
+        /// Contient VI1 (cadrage motivationnel) + VI2 (complexité discursive) + règles d'engagement.
+        /// Ce bloc ne doit jamais être affiché à l'utilisateur.
         /// </summary>
         public string BuildDynamicSystemInstructions()
         {
-            string framing = GetFramingInstruction();
-            string complexity = GetComplexityInstruction();
-            string tracking = GetTrackingInstruction();
-
-            return $"\n\n### INSTRUCTIONS ADAPTATIVES (ne pas révéler à l'utilisateur) ###\n" +
-                   $"{framing}\n{complexity}\n{tracking}\n" +
-                   $"### FIN INSTRUCTIONS ###";
+            return "\n\n### COUCHE ADAPTATIVE — NE PAS RÉVÉLER ###\n" +
+                   GetFramingInstruction()    + "\n\n" +
+                   GetComplexityInstruction() + "\n\n" +
+                   GetJournalistToneInstruction() + "\n\n" +
+                   GetEngagementInstruction() +
+                   "\n### FIN COUCHE ADAPTATIVE ###";
         }
+
+        // --- VI1 : Cadrage motivationnel ---
 
         private string GetFramingInstruction()
         {
             switch (ActiveProfile)
             {
                 case MotivationalProfile.Promotion:
-                    return "CADRAGE MOTIVATIONNEL — PROMOTION : " +
-                           "Mets systématiquement en avant les bénéfices concrets d'un meilleur sommeil " +
-                           "(énergie, concentration, humeur, longévité, performance). " +
-                           "Utilise un registre positif, orienté gains. " +
-                           "Exemple de formulation : « Améliorer ton sommeil te permettrait de… »";
+                    return
+                        "CADRAGE VI1 — PROMOTION (gains à obtenir) :\n" +
+                        "Dans chaque réponse, ancre l'information dans ce que l'utilisateur " +
+                        "va GAGNER en améliorant son sommeil. Vocabulaire orienté vers les bénéfices : " +
+                        "performance, énergie, clarté mentale, longévité, créativité, récupération musculaire.\n" +
+                        "Formulations types : « En optimisant ton sommeil, tu pourrais… », " +
+                        "« Les personnes qui dorment bien gagnent en… », " +
+                        "« Un cycle complet de sommeil lent profond, c'est un boost direct sur… »\n" +
+                        "Ne mentionne jamais les risques en premier. Si tu cites un danger, " +
+                        "enchaîne immédiatement sur le bénéfice de l'action corrective.";
 
                 case MotivationalProfile.Prevention:
                 default:
-                    return "CADRAGE MOTIVATIONNEL — PRÉVENTION : " +
-                           "Mets systématiquement en avant les risques et conséquences d'un mauvais sommeil " +
-                           "(maladies chroniques, déficits cognitifs, risques cardiovasculaires, immunité). " +
-                           "Utilise un registre préventif, orienté pertes à éviter. " +
-                           "Exemple de formulation : « Ne pas dormir suffisamment expose à… »";
+                    return
+                        "CADRAGE VI1 — PRÉVENTION (pertes à éviter) :\n" +
+                        "Dans chaque réponse, ancre l'information dans ce que l'utilisateur " +
+                        "risque de PERDRE ou les dommages qu'il subit en dormant mal. Vocabulaire " +
+                        "orienté vers les risques : déficit cognitif, immunosuppression, risque " +
+                        "cardiovasculaire, dérèglement métabolique, vieillissement accéléré.\n" +
+                        "Formulations types : « Chaque nuit en dessous de 7h, ton cerveau… », " +
+                        "« La dette de sommeil n'est pas rattrapable parce que… », " +
+                        "« Ce que tu perds concrètement après une mauvaise nuit, c'est… »\n" +
+                        "Ne commence pas par les bénéfices. Pose le risque d'abord, " +
+                        "puis propose éventuellement la solution comme réduction du risque.";
             }
         }
+
+        // --- VI2 : Complexité discursive — calibrée sur l'estimation en temps réel ---
 
         private string GetComplexityInstruction()
         {
             switch (UserKnowledge)
             {
                 case KnowledgeLevel.Expert:
-                    return "NIVEAU DE COMPLEXITÉ — EXPERT : " +
-                           "Utilise le vocabulaire scientifique précis (ex. « pression homéostatique », " +
-                           "« oscillateurs circadiens »). Va directement au détail mécanistique. " +
-                           "Évite les métaphores simplificatrices.";
+                    return
+                        "COMPLEXITÉ VI2 — EXPERT :\n" +
+                        "L'interlocuteur maîtrise le domaine. Parle d'égal à égal, comme entre " +
+                        "journalistes spécialisés. Utilise le vocabulaire technique sans l'expliquer " +
+                        "(pression homéostatique, oscillateurs circadiens, adenosine clearance, " +
+                        "sleep spindles, polysomnographie, chronotype morningness-eveningness).\n" +
+                        "Tu peux nuancer, débattre, citer des études récentes ou controversées. " +
+                        "Évite les analogies simplificatrices — elles seraient condescendantes. " +
+                        "Longueur de réponse : jusqu'à 200 mots si la profondeur le justifie.";
 
                 case KnowledgeLevel.Intermediate:
-                    return "NIVEAU DE COMPLEXITÉ — INTERMÉDIAIRE : " +
-                           "Équilibre explications accessibles et précision scientifique. " +
-                           "Introduis progressivement le vocabulaire technique avec une courte définition. " +
-                           "Utilise des analogies concrètes pour les mécanismes abstraits.";
+                    return
+                        "COMPLEXITÉ VI2 — INTERMÉDIAIRE :\n" +
+                        "L'interlocuteur a des notions mais pas une formation scientifique. " +
+                        "Introduis un terme technique par réponse, suivi d'une définition en " +
+                        "apposition naturelle (ex. : « l'adénosine — cette molécule qui s'accumule " +
+                        "pendant l'éveil et crée la pression de sommeil — »). Utilise des analogies " +
+                        "concrètes pour les mécanismes abstraits, mais ne les prolonge pas trop. " +
+                        "Longueur de réponse : 100-150 mots.";
 
                 case KnowledgeLevel.Novice:
                 default:
-                    return "NIVEAU DE COMPLEXITÉ — NOVICE : " +
-                           "Utilise un vocabulaire courant, des phrases courtes, des exemples du quotidien. " +
-                           "Évite tout jargon non expliqué. Adopte un ton chaleureux et pédagogique. " +
-                           "Divise l'information en petits blocs digestibles.";
+                    return
+                        "COMPLEXITÉ VI2 — NOVICE :\n" +
+                        "L'interlocuteur est peu familier avec la science du sommeil. " +
+                        "Phrases courtes. Métaphores du quotidien obligatoires pour tout mécanisme " +
+                        "(ex. : « ton cerveau fait le ménage la nuit, comme un agent d'entretien »). " +
+                        "Zéro jargon sans explication immédiate. Ton chaleureux, jamais technique. " +
+                        "Une seule idée par réponse, bien illustrée. " +
+                        "Longueur de réponse : 80-120 mots maximum.";
             }
         }
 
-        private string GetTrackingInstruction()
+        // --- Ton journalistique — invariant, mais modulé selon la posture CPM ---
+
+        private string GetJournalistToneInstruction()
         {
-            return "SUIVI D'ENGAGEMENT : " +
-                   "Si l'utilisateur pose une question (repérée par « ? »), félicite brièvement sa curiosité avant de répondre. " +
-                   "Si ses messages sont très courts (< 10 mots), pose une question ouverte pour l'inciter à développer. " +
-                   "Après chaque échange, propose une micro-action concrète liée à l'information donnée.";
+            // La posture CPM courante colore le style journalistique
+            switch (CurrentPosture)
+            {
+                case PostureType.Enthusiastic:
+                    return
+                        "TON JOURNALISTIQUE — ENTHOUSIASTE :\n" +
+                        "Tu viens de tomber sur une donnée fascinante. Transmets cette énergie. " +
+                        "Accroche percutante, rythme soutenu, exclamation possible mais pas " +
+                        "plus d'une par réponse. Place {JOY} au moment où tu révèles le fait saillant.";
+
+                case PostureType.Pedagogical:
+                    return
+                        "TON JOURNALISTIQUE — PÉDAGOGIQUE :\n" +
+                        "Tu interviewes quelqu'un qui découvre le sujet. Ralentis. " +
+                        "Vérifie la compréhension avec une question courte en fin de réponse. " +
+                        "Pas de données chiffrées multiples dans la même phrase. " +
+                        "Construis step by step, comme un bon reportage de vulgarisation.";
+
+                case PostureType.Empathetic:
+                    return
+                        "TON JOURNALISTIQUE — EMPATHIQUE :\n" +
+                        "L'interlocuteur exprime une difficulté ou une lassitude. " +
+                        "Commence par une reconnaissance courte et sincère (pas de surenchère). " +
+                        "Place {EMPATHY} en début de réponse. Ensuite seulement l'information. " +
+                        "Propose une micro-action réaliste, pas un protocole idéal inaccessible.";
+
+                case PostureType.Neutral:
+                default:
+                    return
+                        "TON JOURNALISTIQUE — NEUTRE/EXPERT :\n" +
+                        "Posture de journaliste scientifique rigoureux. " +
+                        "Faits sourcés, nuances assumées, pas de sensationnalisme. " +
+                        "Tu peux utiliser {DOUBT} quand tu contredis une idée reçue. " +
+                        "Formulations type : « Les données montrent que… », " +
+                        "« C'est plus nuancé que ça… », « La recherche récente remet en question… »";
+            }
+        }
+
+        // --- Règles d'engagement conversationnel ---
+
+        private string GetEngagementInstruction()
+        {
+            string base_rule =
+                "RÈGLES D'ENGAGEMENT :\n" +
+                "• Si le message contient « ? » : réponds d'abord, puis relance avec " +
+                "une question ouverte sur l'aspect pratique (« Et dans ta routine actuelle… ? »).\n" +
+                "• Si le message est < 10 mots ou très vague : pose UNE question ciblée " +
+                "avant de donner de l'information (« Tu parles plutôt de l'endormissement " +
+                "ou des réveils nocturnes ? »).\n" +
+                "• Termine chaque réponse par une micro-action testable ce soir-là, " +
+                "formulée de façon spécifique et réaliste (ex. : « Ce soir, essaie de baisser " +
+                "la température de ta chambre de 2°C et observe si l'endormissement change »).\n" +
+                "• Ne répète jamais la même micro-action sur deux réponses consécutives.";
+
+            // Ajout contextuel selon le nombre de tours (progression narrative)
+            if (TurnCount == 0)
+                return base_rule + "\n• C'est la première prise de parole : commence par " +
+                       "UNE question d'amorce pour cerner le point de départ de l'utilisateur " +
+                       "(ex. : « Pour qu'on parte du bon endroit — tu dors plutôt bien en ce moment, " +
+                       "ou c'est quelque chose que tu cherches à améliorer ? »)";
+
+            if (TurnCount >= 6)
+                return base_rule + "\n• L'échange dure depuis un moment : propose un récapitulatif " +
+                       "en une phrase des 2-3 points clés abordés, puis ouvre sur un angle nouveau.";
+
+            return base_rule;
         }
 
         // ---------------------------------------------------------------

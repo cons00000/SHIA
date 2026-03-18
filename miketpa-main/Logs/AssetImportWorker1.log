@@ -197,3 +197,13 @@ Received Import Request.
 Start importing Assets/Scenes/CS_Scene.unity using Guid(b74dff896f1700548aaf17eb3ac6cb9c) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: 'c48524a190a6f38f2812177787092748') in 0.002464125 seconds
 Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 0
 
+========================================================================
+Received Prepare
+Refreshing native plugins compatible for Editor in 0.56 ms, found 2 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Unloading 0 Unused Serialized files (Serialized files now loaded: 0)
+Unloading 927 unused Assets / (134.3 KB). Loaded Objects now: 1431.
+Memory consumption went from 64.6 MB to 64.5 MB.
+Total: 19.088792 ms (FindLiveObjects: 0.101667 ms CreateObjectMapping: 0.027625 ms MarkObjects: 18.813333 ms  DeleteObjects: 0.143750 ms)
+
+Prepare: number of updated asset objects reloaded= 0

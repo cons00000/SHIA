@@ -390,6 +390,7 @@
 "Assets/Scripts/FacialExpression.cs"
 "Assets/Scripts/FacialExpressionAvaturn.cs"
 "Assets/Scripts/Gaze.cs"
+"Assets/Scripts/InteractionLogger.cs"
 "Assets/Scripts/KeyListener.cs"
 "Assets/Scripts/KeyListenerAvaturn.cs"
 "Assets/Scripts/LLMDialogManager.cs"

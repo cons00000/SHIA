@@ -205,3 +205,13 @@ Received Import Request.
 Start importing Assets/Scripts/TargetControl.cs using Guid(8a6fb492d8626da43b63e5d8d62d113a) Importer(815301076,1909f56bfc062723c751e8b465ee728b) (PreviewImporter) -> (artifact id: 'b6407588cdec49ac7ced75c17955f562') in 0.00034625 seconds
 Number of updated asset objects reloaded before import = 0Number of asset objects unloaded after import = 0
 
+========================================================================
+Received Prepare
+Refreshing native plugins compatible for Editor in 0.57 ms, found 2 plugins.
+Preloading 0 native plugins for Editor in 0.00 ms.
+Unloading 0 Unused Serialized files (Serialized files now loaded: 0)
+Unloading 927 unused Assets / (127.5 KB). Loaded Objects now: 1431.
+Memory consumption went from 64.6 MB to 64.5 MB.
+Total: 19.673250 ms (FindLiveObjects: 0.100458 ms CreateObjectMapping: 0.030167 ms MarkObjects: 19.393125 ms  DeleteObjects: 0.149208 ms)
+
+Prepare: number of updated asset objects reloaded= 0

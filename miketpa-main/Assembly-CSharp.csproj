@@ -64,6 +64,7 @@
     <Compile Include="Assets/Scripts/EmotionReceiver.cs" />
     <Compile Include="Assets/Scripts/FacialExpressionAvaturn.cs" />
     <Compile Include="Assets/Scripts/Utils/Wav2VecClient.cs" />
+    <Compile Include="Assets/Scripts/InteractionLogger.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="Assets/Scripts/BlendShapesUtils/emotion-recognition/haarcascade_files/haarcascade_frontalface_default.xml" />

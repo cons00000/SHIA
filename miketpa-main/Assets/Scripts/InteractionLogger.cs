@@ -50,7 +50,6 @@ public class InteractionLogger : MonoBehaviour
             KnowledgeLevel     = model.UserKnowledge.ToString(),
             Posture            = model.CurrentPosture.ToString(),
             MotivationalProfile = model.ActiveProfile.ToString(),
-            Condition          = model.IsAdaptiveCondition ? "Adaptive" : "Control",
             TimestampSec       = Time.time
         });
     }

@@ -74,9 +74,8 @@ public class LMStudioDialogManager : MonoBehaviour
     //  Accessible depuis l'Inspector Unity pour basculer en contrôle
     // ---------------------------------------------------------------
     [Header("Condition expérimentale")]
-    [Tooltip("true = condition adaptative | false = condition contrôle (cadrage inversé)")]
-    public bool isAdaptiveCondition = true;
-
+    [Tooltip("Promotion = mettre en avant les gains / Prevention = mettre en avant les risques")]
+    public ComputationalModel.MotivationalProfile motivationalProfile = ComputationalModel.MotivationalProfile.Promotion;
     // ---------------------------------------------------------------
 
     void Start()
@@ -84,7 +83,7 @@ public class LMStudioDialogManager : MonoBehaviour
         anim = GetComponent<Animator>();
 
         // Initialisation du modèle avec la condition choisie dans l'Inspector
-        model = new ComputationalModel { IsAdaptiveCondition = isAdaptiveCondition };
+        model = new ComputationalModel { ExperimenterProfile = motivationalProfile };
 
         InformationDisplay("");
         textPanel.GetComponentInChildren<Text>().text = "";

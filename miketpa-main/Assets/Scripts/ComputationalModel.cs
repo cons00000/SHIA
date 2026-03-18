@@ -9,18 +9,17 @@ namespace Assets.Scripts
     /// </summary>
     public class ComputationalModel
     {
-        // ---------------------------------------------------------------
-        //  VI1 : PROFIL MOTIVATIONNEL — à définir par l'expérimentateur
-        //  Modifier uniquement cette ligne avant chaque passation.
-        // ---------------------------------------------------------------
-        private const MotivationalProfile EXPERIMENTER_PROFILE = MotivationalProfile.Promotion;
-        // ---------------------------------------------------------------
+        /// <summary>
+        /// Profil motivationnel VI1 — configurable depuis l'Inspector Unity.
+        /// Promotion = mettre en avant les gains. Prevention = mettre en avant les risques.
+        /// </summary>
+        public MotivationalProfile ExperimenterProfile = MotivationalProfile.Promotion;
 
         /// <summary>
         /// Indique si l'on est en condition ADAPTATIVE (true) ou CONTRÔLE (false).
         /// En condition contrôle, le cadrage est inversé par rapport au profil.
         /// </summary>
-        public bool IsAdaptiveCondition = true;
+        
 
         public enum MotivationalProfile { Promotion, Prevention }
         public enum PostureType        { Neutral, Pedagogical, Enthusiastic, Empathetic }
@@ -62,9 +61,7 @@ namespace Assets.Scripts
         private void Init()
         {
             // Applique la logique condition adaptative / contrôle
-            ActiveProfile    = IsAdaptiveCondition
-                                ? EXPERIMENTER_PROFILE
-                                : Invert(EXPERIMENTER_PROFILE);
+            ActiveProfile = ExperimenterProfile;
 
             Novelty          = 0.5f;
             Complexity       = 0.5f;
@@ -360,15 +357,13 @@ namespace Assets.Scripts
         {
             return $"Turns:{TurnCount}|Questions:{UserQuestionCount}|" +
                    $"AvgLength:{AverageMessageLength:F1}|Duration:{TotalInteractionTime:F0}s|" +
-                   $"Knowledge:{UserKnowledge}|Profile:{ActiveProfile}|Condition:{(IsAdaptiveCondition ? "Adaptive" : "Control")}";
+                   $"Knowledge:{UserKnowledge}|Profile:{ActiveProfile}";
         }
 
         // ---------------------------------------------------------------
         //  UTILITAIRES
         // ---------------------------------------------------------------
 
-        private MotivationalProfile Invert(MotivationalProfile p) =>
-            p == MotivationalProfile.Promotion ? MotivationalProfile.Prevention : MotivationalProfile.Promotion;
 
         // Compatibilité ancienne API
         public void UserValues(string values) { RecordUserTurn(values); }

@@ -115,6 +115,8 @@ public class AvaturnLLMDialogManager : MonoBehaviour
 
     private void DictationRecognizer_DictationResult(string text, ConfidenceLevel confidence)
     {
+        text = string.IsNullOrWhiteSpace(text) ? string.Empty : text.Trim();
+        if (string.IsNullOrEmpty(text)) return;
         textPanel.GetComponentInChildren<Text>().text = text;
         computationalModel.RecordUserTurn(text);
 
@@ -134,7 +136,7 @@ public class AvaturnLLMDialogManager : MonoBehaviour
 
     private void OnButtonPressed()
     {
-        if (useWhisper)
+        if (useWhisper) // on utilise Whisper -> ne s'occupe que de l'affichage du bouton selon si la condition de lancer l'enregistrement est vraie ou pas
         {
             if (!microphoneRecord.IsRecording)
             {
@@ -162,18 +164,20 @@ public class AvaturnLLMDialogManager : MonoBehaviour
         }
     }
 
-    private async void OnRecordStop(AudioChunk audioChunk)
+    private async void OnRecordStop(AudioChunk audioChunk) // retranscription de la conversation ?
     {
         _buffer = "";
         var res = await whisper.GetTextAsync(audioChunk.Data, audioChunk.Frequency, audioChunk.Channels);
         if (res == null) return;
 
-        var text = res.Result;
+        var text = string.IsNullOrWhiteSpace(res.Result) ? string.Empty : res.Result.Trim();
+        if (string.IsNullOrEmpty(text)) return;
         computationalModel.RecordUserTurn(text);
         UserAnalysis(text);
 
-        if (printLanguage) text += $"\n\nLanguage: {res.Language}";
-        textPanel.GetComponentInChildren<Text>().text = text;
+        string displayText = text;
+        if (printLanguage) displayText += $"\n\nLanguage: {res.Language}";
+        textPanel.GetComponentInChildren<Text>().text = displayText;
 
         JsonValue userTurn = new JsonValue(JsonType.Object);
         JsonValue userRole = new JsonValue(JsonType.String);
@@ -272,8 +276,7 @@ public class AvaturnLLMDialogManager : MonoBehaviour
         }
 
         _response = uwr.downloadHandler.text;
-        JsonValue response = jsonParser.Parse(_response);
-        computationalModel.UserValues(response.StringValue);
+        Debug.Log("[USER_ANALYSIS] " + _response);
     }
 
     IEnumerator LLMRequest(string url, string json)
@@ -294,15 +297,14 @@ public class AvaturnLLMDialogManager : MonoBehaviour
         }
 
         _response = uwr.downloadHandler.text;
-        JsonValue response = jsonParser.Parse(_response);
-        computationalModel.LLMValues(response.StringValue);
+        Debug.Log("[LLM_ANALYSIS] " + _response);
     }
 
     // ---------------------------------------------------------------
     //  BALISES EMOTIONNELLES
     // ---------------------------------------------------------------
 
-    private string ProcessAffectiveContent(string response)
+    private string ProcessAffectiveContent(string response) // récupérer et afficher les expressions faciales
     {
         if (response.Contains("{JOY}"))
         {

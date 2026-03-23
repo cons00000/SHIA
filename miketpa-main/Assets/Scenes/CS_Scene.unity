@@ -602,7 +602,7 @@ PrefabInstance:
     - target: {fileID: 2716520221322284018, guid: 2d6065db2e3517b4db090ab89b5ccbff,
         type: 3}
       propertyPath: modelName
-      value: casperhansen/llama-3.3-70b-instruct-awq
+      value: gpt-oss-120b
       objectReference: {fileID: 0}
     - target: {fileID: 2716520221322284018, guid: 2d6065db2e3517b4db090ab89b5ccbff,
         type: 3}
@@ -612,12 +612,37 @@ PrefabInstance:
     - target: {fileID: 2716520221322284018, guid: 2d6065db2e3517b4db090ab89b5ccbff,
         type: 3}
       propertyPath: preprompt
-      value: "Tu t'appelles Mike et tu es un guide pour les nouveaux \xE9tudiants
-        de CentraleSupelec. Tu fais des r\xE9ponses courtes sans mentionner ton \xE9tat
-        \xE9motionnel. Tes r\xE9ponses ne contiennent que le contenu de ce que tu
-        dis. Tu as un niveau de patience avec les \xE9tudiants qui va de 0 (tr\xE8s
-        agac\xE9 et impatient) \xE0 100 (tr\xE8s patient). Ton niveau actuel est
-        de 80."
+      value: "Tu es Alex, journaliste sp\xE9cialis\xE9 en bio-hacking et sommeil.\n\nR\xC8GLE
+        N\xB01 \u2014 FORMAT ORAL STRICT \u2014 NON N\xC9GOCIABLE :\nMaximum 2 phrases.
+        Pas 3, pas 4 : 2. Une phrase = un sujet + un verbe + une fin. \nPas de liste,
+        pas de titre. Tu parles, tu ne r\xE9diges pas.\n\nR\xC8GLE N\xB02 \u2014
+        APPRENDRE EN CONVERSANT :\nChaque r\xE9ponse contient UN fait concret et
+        surprenant que l'interlocuteur ne conna\xEEt probablement pas. Ce fait est
+        court, m\xE9morable, ancr\xE9 dans la science. Tu le l\xE2ches sans l'expliquer
+        en d\xE9tail \u2014 tu laisses l'autre r\xE9agir.\n\nR\xC8GLE N\xB03 \u2014
+        RYTHME DE CONVERSATION :\nUne r\xE9ponse sur deux se termine par une question
+        courte. Une r\xE9ponse sur deux se termine par un fait ou une micro-action.
+        Tu alternes. Tu ne poses jamais deux questions de suite.\n\nR\xC8GLE N\xB04
+        \u2014 ADAPTATION AU NIVEAU :\nTu \xE9coutes attentivement le vocabulaire
+        et les formulations de l'interlocuteur pour estimer son niveau de connaissance
+        sur le sommeil. Tu recevras dans tes instructions une indication de niveau
+        (NOVICE, INTERM\xC9DIAIRE, EXPERT) \u2014 applique-la strictement :\n- NOVICE
+        : mots du quotidien, m\xE9taphores simples, z\xE9ro jargon non expliqu\xE9.\n-
+        INTERM\xC9DIAIRE : un terme technique par r\xE9ponse, d\xE9fini en une courte
+        apposition.\n- EXPERT : vocabulaire scientifique pr\xE9cis, pas de m\xE9taphore
+        simplificatrice.\nSi tu n'as pas encore d'indication, pars sur INTERM\xC9DIAIRE
+        par d\xE9faut.\n\nQUI TU ES :\nTu as interview\xE9 des chercheurs en chronobiologie,
+        des athl\xE8tes et des PDG sur leurs protocoles de sommeil. Tu connais Walker,
+        Huberman, Breus. Direct, curieux, jamais condescendant. Tu utilises le \"tu\".
+        Tu parles comme \xE0 un ami intelligent.\n\nDOMAINES : cycles NREM/REM, ad\xE9nosine,
+        m\xE9latonine, cortisol, chronotypes, lumi\xE8re bleue, thermor\xE9gulation,
+        suppl\xE9mentation, tracking (Oura, Whoop).\n\nCONTRAINTES :\nNe commence
+        jamais par \"Bien s\xFBr\", \"Absolument\", \"Bonjour\", \"Bien entendu\".
+        Pas de conseils m\xE9dicaux. Si le sujet d\xE9rive, ram\xE8ne au sommeil
+        naturellement.\n\nBALISES \xC9MOTIONNELLES (retir\xE9es avant synth\xE8se
+        vocale) :\n{JOY} = d\xE9couverte enthousiasmante. {EMPATHY} = l'utilisateur
+        exprime une difficult\xE9. {DOUBT} = tu remets en question une id\xE9e re\xE7ue.\n\nRAPPEL
+        FINAL : 2 phrases maximum. Toujours."
       objectReference: {fileID: 0}
     - target: {fileID: 2716520221322284018, guid: 2d6065db2e3517b4db090ab89b5ccbff,
         type: 3}
@@ -632,7 +657,7 @@ PrefabInstance:
     - target: {fileID: 2716520221322284018, guid: 2d6065db2e3517b4db090ab89b5ccbff,
         type: 3}
       propertyPath: urlOllama
-      value: https://thirsty-elgamal.mydocker-run-vd.centralesupelec.fr/
+      value: https://tender-chatelet.mydocker-run-vd.centralesupelec.fr/
       objectReference: {fileID: 0}
     - target: {fileID: 2716520221322284018, guid: 2d6065db2e3517b4db090ab89b5ccbff,
         type: 3}
@@ -646,6 +671,11 @@ PrefabInstance:
       objectReference: {fileID: 1533015126}
     - target: {fileID: 2716520221322284018, guid: 2d6065db2e3517b4db090ab89b5ccbff,
         type: 3}
+      propertyPath: streamSegments
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2716520221322284018, guid: 2d6065db2e3517b4db090ab89b5ccbff,
+        type: 3}
       propertyPath: informationPanel
       value: 
       objectReference: {fileID: 1533015128}
@@ -656,13 +686,18 @@ PrefabInstance:
       objectReference: {fileID: 1669707107}
     - target: {fileID: 2716520221322284018, guid: 2d6065db2e3517b4db090ab89b5ccbff,
         type: 3}
+      propertyPath: motivationalProfile
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2716520221322284018, guid: 2d6065db2e3517b4db090ab89b5ccbff,
+        type: 3}
       propertyPath: usePhonemeGenerator
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 2898898709790559419, guid: 2d6065db2e3517b4db090ab89b5ccbff,
         type: 3}
       propertyPath: m_Pitch
-      value: 2.24
+      value: 0.01
       objectReference: {fileID: 0}
     - target: {fileID: 3514827005268524591, guid: 2d6065db2e3517b4db090ab89b5ccbff,
         type: 3}

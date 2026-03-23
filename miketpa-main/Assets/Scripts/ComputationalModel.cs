@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using System;
+using System.Collections.Generic;
+using UnityEngine;
 
 namespace Assets.Scripts
 {
@@ -9,11 +11,63 @@ namespace Assets.Scripts
     /// </summary>
     public class ComputationalModel
     {
+        private static readonly string[] ExpertTerms = {
+            "cortisol", "melatonine", "mélatonine", "circadien", "slow wave", "rem", "polysomnographie",
+            "adenosine", "homeostasie", "homéostasie", "chronotype", "actigraphie", "spindle", "k-complex",
+            "hypnogramme", "delta wave", "cycle ultradian"
+        };
+
+        private static readonly string[] MidTerms = {
+            "sommeil profond", "sommeil paradoxal", "cycle", "rythme", "recuperation", "récupération",
+            "dette de sommeil", "lumiere bleue", "lumière bleue", "temperature", "température",
+            "reveil", "réveil", "endormissement"
+        };
+
+        private static readonly string[] GoalTerms = {
+            "sommeil", "dorm", "insom", "fatigue", "reveil", "réveil", "endorm", "nuit",
+            "routine", "energie", "énergie", "concentration", "stress", "sieste"
+        };
+
+        private static readonly string[] NoveltyTerms = {
+            "nouveau", "nouvelle", "decouverte", "découverte", "surprenant", "surprenante",
+            "contre-intuitif", "contre-intuitive", "recemment", "récemment", "en realite", "en réalité"
+        };
+
+        private static readonly string[] TechnicalTerms = {
+            "mecanisme", "mécanisme", "physiolog", "homeost", "homéost", "circad", "adenos",
+            "melaton", "mélaton", "cortisol", "neuro", "ultradian", "polysomnograph"
+        };
+
+        private static readonly string[] ActionTerms = {
+            "essaie", "essayez", "teste", "teste ce soir", "observe", "ajuste", "baisse",
+            "augmente", "evite", "évite", "garde", "note", "compare"
+        };
+
+        private static readonly string[] SelfReferenceTerms = {
+            " je ", " j'", " moi ", " mon ", " ma ", " mes ", " routine ", " habitudes "
+        };
+
+        private static readonly char[] WordSeparators = {
+            ' ', '\n', '\r', '\t', '.', ',', ';', ':', '!', '?', '(', ')', '[', ']', '{', '}',
+            '"', '\'', '«', '»', '/', '\\', '-', '_', '’'
+        };
+
+        private const float EstimatedSpeechRateWordsPerSecond = 2.6f;
+
         /// <summary>
         /// Profil motivationnel VI1 — configurable depuis l'Inspector Unity.
         /// Promotion = mettre en avant les gains. Prevention = mettre en avant les risques.
         /// </summary>
-        public MotivationalProfile ExperimenterProfile = MotivationalProfile.Promotion;
+        private MotivationalProfile _experimenterProfile = MotivationalProfile.Promotion;
+        public MotivationalProfile ExperimenterProfile
+        {
+            get => _experimenterProfile;
+            set
+            {
+                _experimenterProfile = value;
+                ActiveProfile = value;
+            }
+        }
 
         /// <summary>
         /// Indique si l'on est en condition ADAPTATIVE (true) ou CONTRÔLE (false).
@@ -38,11 +92,30 @@ namespace Assets.Scripts
 
         // --- Indicateurs d'engagement (VD1) ---
         public int   TurnCount       { get; private set; }
+        public int   AgentTurnCount  { get; private set; }
         public int   UserQuestionCount { get; private set; }
         public float TotalInteractionTime { get; private set; }
         public float AverageMessageLength { get; private set; }
+        public float AverageAgentMessageLength { get; private set; }
+        public int   LastUserMessageLength { get; private set; }
+        public int   LastAgentMessageLength { get; private set; }
+        public int   LastUserWordCount { get; private set; }
+        public int   LastAgentWordCount { get; private set; }
+        public float AgentToUserLengthRatio { get; private set; }
+        public float DialogueBalance { get; private set; }
+        public float EstimatedLastUserSpeechSec { get; private set; }
+        public float EstimatedLastAgentSpeechSec { get; private set; }
+        public float MaxRecommendedAgentSpeechSec { get; private set; }
+        public float MaxAgentToUserSpeechRatio { get; private set; }
+        public int   RecommendedAgentMinWords { get; private set; }
+        public int   RecommendedAgentMaxWords { get; private set; }
         private float _totalUserChars;
+        private float _totalAgentChars;
         private float _startTime;
+        private string _lastUserMessage = string.Empty;
+        private string _lastAgentMessage = string.Empty;
+        private string _previousUserMessage = string.Empty;
+        private string _previousAgentMessage = string.Empty;
 
         // Compatibilité avec l'ancien système
         private int _nombreDeTours = 0;
@@ -61,7 +134,7 @@ namespace Assets.Scripts
         private void Init()
         {
             // Applique la logique condition adaptative / contrôle
-            ActiveProfile = ExperimenterProfile;
+            ActiveProfile = _experimenterProfile;
 
             Novelty          = 0.5f;
             Complexity       = 0.5f;
@@ -86,18 +159,20 @@ namespace Assets.Scripts
             CopingPotential = Mathf.Clamp01(coping);
             GoalRelevance   = Mathf.Clamp01(goal);
             DeterminePosture();
+            UpdateRecommendedResponseLength();
         }
 
         private void DeterminePosture()
         {
-            // Priorité 1 : l'utilisateur est dépassé → posture pédagogique
-            if (CopingPotential < 0.4f)
+            // Priorité 1 : l'utilisateur est dépassé ou l'agent monopolise l'échange → posture pédagogique
+            if (CopingPotential < 0.45f ||
+                (AgentTurnCount > 0 && DialogueBalance < 0.45f && AgentToUserLengthRatio > 2.4f))
             {
                 CurrentPosture = PostureType.Pedagogical;
                 return;
             }
             // Priorité 2 : info nouvelle et pertinente pour ses buts → enthousiasme
-            if (GoalRelevance > 0.7f && Novelty > 0.6f)
+            if (GoalRelevance > 0.7f && Novelty > 0.6f && DialogueBalance > 0.4f)
             {
                 CurrentPosture = PostureType.Enthusiastic;
                 return;
@@ -118,35 +193,22 @@ namespace Assets.Scripts
 
         /// <summary>
         /// Analyse le texte de l'utilisateur et estime son niveau de connaissance
-        /// sur le sommeil. Met à jour CopingPotential en conséquence.
+        /// sur le sommeil. Le CopingPotential est ensuite recalculé à partir
+        /// de l'état global du dialogue.
         /// </summary>
         public void EstimateUserKnowledge(string userMessage)
         {
             if (string.IsNullOrEmpty(userMessage)) return;
 
-            string msg = userMessage.ToLower();
+            string msg = userMessage.ToLowerInvariant();
             int score = 0;
 
-            // Vocabulaire expert
-            string[] expertTerms = {
-                "cortisol", "mélatonine", "circadien", "slow wave", "rem", "polysomnographie",
-                "adenosine", "homéostasie", "chronotype", "actigraphie", "spindle", "k-complex",
-                "hypnogramme", "delta wave", "cycle ultradian"
-            };
-            // Vocabulaire intermédiaire
-            string[] midTerms = {
-                "sommeil profond", "sommeil paradoxal", "cycle", "rythme", "récupération",
-                "dette de sommeil", "lumière bleue", "température", "réveil", "endormissement"
-            };
+            score += CountMatches(msg, ExpertTerms) * 2;
+            score += CountMatches(msg, MidTerms);
 
-            foreach (string t in expertTerms)
-                if (msg.Contains(t)) score += 2;
-            foreach (string t in midTerms)
-                if (msg.Contains(t)) score += 1;
-
-            if      (score >= 5) { UserKnowledge = KnowledgeLevel.Expert;       CopingPotential = Mathf.Min(1.0f, CopingPotential + 0.2f); }
-            else if (score >= 2) { UserKnowledge = KnowledgeLevel.Intermediate; }
-            else                 { UserKnowledge = KnowledgeLevel.Novice;        CopingPotential = Mathf.Max(0.1f, CopingPotential - 0.2f); }
+            if      (score >= 5) UserKnowledge = KnowledgeLevel.Expert;
+            else if (score >= 2) UserKnowledge = KnowledgeLevel.Intermediate;
+            else                 UserKnowledge = KnowledgeLevel.Novice;
         }
 
         // ---------------------------------------------------------------
@@ -171,7 +233,8 @@ namespace Assets.Scripts
                    GetFramingInstruction()    + "\n\n" +
                    GetComplexityInstruction() + "\n\n" +
                    GetJournalistToneInstruction() + "\n\n" +
-                   GetEngagementInstruction() +
+                   GetEngagementInstruction() + "\n\n" +
+                   GetDialogueRhythmInstruction() +
                    "\n### FIN COUCHE ADAPTATIVE ###";
         }
 
@@ -224,7 +287,7 @@ namespace Assets.Scripts
                         "sleep spindles, polysomnographie, chronotype morningness-eveningness).\n" +
                         "Tu peux nuancer, débattre, citer des études récentes ou controversées. " +
                         "Évite les analogies simplificatrices — elles seraient condescendantes. " +
-                        "Longueur de réponse : jusqu'à 200 mots si la profondeur le justifie.";
+                        "Longueur de réponse : environ 35 à 80 mots, uniquement si la profondeur le justifie.";
 
                 case KnowledgeLevel.Intermediate:
                     return
@@ -234,7 +297,7 @@ namespace Assets.Scripts
                         "apposition naturelle (ex. : « l'adénosine — cette molécule qui s'accumule " +
                         "pendant l'éveil et crée la pression de sommeil — »). Utilise des analogies " +
                         "concrètes pour les mécanismes abstraits, mais ne les prolonge pas trop. " +
-                        "Longueur de réponse : 100-150 mots.";
+                        "Longueur de réponse : environ 25 à 55 mots.";
 
                 case KnowledgeLevel.Novice:
                 default:
@@ -245,7 +308,7 @@ namespace Assets.Scripts
                         "(ex. : « ton cerveau fait le ménage la nuit, comme un agent d'entretien »). " +
                         "Zéro jargon sans explication immédiate. Ton chaleureux, jamais technique. " +
                         "Une seule idée par réponse, bien illustrée. " +
-                        "Longueur de réponse : 80-120 mots maximum.";
+                        "Longueur de réponse : environ 15 à 40 mots maximum.";
             }
         }
 
@@ -308,7 +371,7 @@ namespace Assets.Scripts
                 "• Ne répète jamais la même micro-action sur deux réponses consécutives.";
 
             // Ajout contextuel selon le nombre de tours (progression narrative)
-            if (TurnCount == 0)
+            if (TurnCount <= 1)
                 return base_rule + "\n• C'est la première prise de parole : commence par " +
                        "UNE question d'amorce pour cerner le point de départ de l'utilisateur " +
                        "(ex. : « Pour qu'on parte du bon endroit — tu dors plutôt bien en ce moment, " +
@@ -321,15 +384,54 @@ namespace Assets.Scripts
             return base_rule;
         }
 
+        private string GetDialogueRhythmInstruction()
+        {
+            string turnDescription;
+            if (LastUserWordCount <= 6)
+                turnDescription = "Le dernier tour utilisateur est très bref : réponds brièvement, puis clarifie avec une seule question.";
+            else if (LastUserWordCount <= 18)
+                turnDescription = "Le dernier tour utilisateur est court : réponds précisément sans lancer un monologue.";
+            else
+                turnDescription = "Le dernier tour utilisateur est développé : tu peux apporter plus de matière, mais garde une structure simple.";
+
+            string balanceDescription =
+                AgentTurnCount > 0 && AgentToUserLengthRatio > 2.0f
+                ? "Ta réponse précédente était trop longue par rapport à l'utilisateur : raccourcis nettement celle-ci."
+                : "Maintiens une alternance naturelle : laisse de l'espace à l'utilisateur au prochain tour.";
+
+            string lastAgentLength =
+                AgentTurnCount > 0
+                ? $"• Ta réponse précédente faisait environ {LastAgentWordCount} mots.\n"
+                : string.Empty;
+
+            return "RYTHME DIALOGIQUE :\n" +
+                   $"• Dernier tour utilisateur : environ {LastUserWordCount} mots.\n" +
+                   lastAgentLength +
+                   $"• Le dernier tour utilisateur représente environ {EstimatedLastUserSpeechSec:F1} s d'oral.\n" +
+                   $"• Vise {RecommendedAgentMinWords}-{RecommendedAgentMaxWords} mots pour la prochaine réponse.\n" +
+                   $"• Ne dépasse pas environ {MaxRecommendedAgentSpeechSec:F1} s d'oral, soit au plus {MaxAgentToUserSpeechRatio:F1}x la durée estimée du dernier tour utilisateur.\n" +
+                   $"• {turnDescription}\n" +
+                   $"• {balanceDescription}\n" +
+                   "• Si l'utilisateur répond en quelques mots, privilégie une relance courte plutôt qu'une explication dense.\n" +
+                   "• Évite l'effet tunnel : même avec beaucoup d'informations, garde une réponse respirable et laisse de la place à la relance.\n" +
+                   "• Si l'utilisateur détaille son vécu, adapte la longueur et le niveau de détail sans dépasser le cadre d'une vraie conversation.";
+        }
+
         // ---------------------------------------------------------------
         //  INDICATEURS D'ENGAGEMENT (VD1)
         // ---------------------------------------------------------------
 
         public void RecordUserTurn(string userMessage)
         {
+            userMessage = SanitizeMessage(userMessage);
             if (string.IsNullOrEmpty(userMessage)) return;
+
+            _previousUserMessage = _lastUserMessage;
+            _lastUserMessage = userMessage;
             _nombreDeTours++;
             TurnCount++;
+            LastUserMessageLength = userMessage.Length;
+            LastUserWordCount = CountWords(userMessage);
             _totalUserChars += userMessage.Length;
             AverageMessageLength = _totalUserChars / TurnCount;
             TotalInteractionTime = UnityEngine.Time.time - _startTime;
@@ -338,16 +440,26 @@ namespace Assets.Scripts
                 UserQuestionCount++;
 
             EstimateUserKnowledge(userMessage);
+            RefreshDialogueMetrics();
+            UpdateDialogueSECs();
         }
 
         public void RecordAgentTurn(string agentMessage)
         {
+            agentMessage = SanitizeMessage(agentMessage);
             if (string.IsNullOrEmpty(agentMessage)) return;
-            // Analyse CPM basée sur la réponse générée
-            float novelty    = agentMessage.Contains("nouveau") || agentMessage.Contains("découverte") ? 0.8f : 0.4f;
-            float complexity = agentMessage.Contains("mécanisme") || agentMessage.Contains("physiolog") ? 0.75f : 0.45f;
-            float goal       = agentMessage.Contains("sommeil") || agentMessage.Contains("santé")       ? 0.85f : 0.5f;
-            UpdateScherer(novelty, complexity, CopingPotential, goal);
+
+            _previousAgentMessage = _lastAgentMessage;
+            _lastAgentMessage = agentMessage;
+            AgentTurnCount++;
+            LastAgentMessageLength = agentMessage.Length;
+            LastAgentWordCount = CountWords(agentMessage);
+            _totalAgentChars += agentMessage.Length;
+            AverageAgentMessageLength = _totalAgentChars / AgentTurnCount;
+            TotalInteractionTime = UnityEngine.Time.time - _startTime;
+
+            RefreshDialogueMetrics();
+            UpdateDialogueSECs();
         }
 
         /// <summary>
@@ -356,8 +468,327 @@ namespace Assets.Scripts
         public string GetEngagementSummary()
         {
             return $"Turns:{TurnCount}|Questions:{UserQuestionCount}|" +
-                   $"AvgLength:{AverageMessageLength:F1}|Duration:{TotalInteractionTime:F0}s|" +
-                   $"Knowledge:{UserKnowledge}|Profile:{ActiveProfile}";
+                   $"AvgUserLength:{AverageMessageLength:F1}|AvgAgentLength:{AverageAgentMessageLength:F1}|" +
+                   $"LastUserWords:{LastUserWordCount}|LastAgentWords:{LastAgentWordCount}|" +
+                   $"UserSpeechSec:{EstimatedLastUserSpeechSec:F1}|AgentSpeechSec:{EstimatedLastAgentSpeechSec:F1}|" +
+                   $"MaxAgentSpeechSec:{MaxRecommendedAgentSpeechSec:F1}|" +
+                   $"Balance:{DialogueBalance:F2}|Ratio:{AgentToUserLengthRatio:F2}|" +
+                   $"Duration:{TotalInteractionTime:F0}s|Knowledge:{UserKnowledge}|" +
+                   $"Posture:{CurrentPosture}|Profile:{ActiveProfile}";
+        }
+
+        private void RefreshDialogueMetrics()
+        {
+            AverageAgentMessageLength = AgentTurnCount > 0 ? _totalAgentChars / AgentTurnCount : 0f;
+
+            if (LastUserWordCount <= 0 || LastAgentWordCount <= 0)
+            {
+                AgentToUserLengthRatio = 1f;
+                DialogueBalance = 1f;
+                EstimatedLastUserSpeechSec = EstimateSpeechDurationSeconds(LastUserWordCount);
+                EstimatedLastAgentSpeechSec = EstimateSpeechDurationSeconds(LastAgentWordCount);
+                UpdateRecommendedResponseLength();
+                return;
+            }
+
+            AgentToUserLengthRatio = (float)LastAgentWordCount / LastUserWordCount;
+            float longerTurn = Mathf.Max(LastUserWordCount, LastAgentWordCount);
+            float shorterTurn = Mathf.Max(1f, Mathf.Min(LastUserWordCount, LastAgentWordCount));
+            DialogueBalance = shorterTurn / longerTurn;
+            EstimatedLastUserSpeechSec = EstimateSpeechDurationSeconds(LastUserWordCount);
+            EstimatedLastAgentSpeechSec = EstimateSpeechDurationSeconds(LastAgentWordCount);
+            UpdateRecommendedResponseLength();
+        }
+
+        private void UpdateDialogueSECs()
+        {
+            UpdateScherer(
+                ComputeNovelty(_lastUserMessage, _lastAgentMessage),
+                ComputeComplexity(_lastUserMessage, _lastAgentMessage),
+                ComputeCopingPotential(_lastUserMessage),
+                ComputeGoalRelevance(_lastUserMessage, _lastAgentMessage));
+        }
+
+        private float ComputeNovelty(string userMessage, string agentMessage)
+        {
+            float score = 0.25f;
+            float overlapWithHistory = ComputeTokenOverlap(
+                userMessage,
+                $"{_previousUserMessage} {_previousAgentMessage}");
+
+            score += Mathf.Lerp(0.30f, 0.05f, overlapWithHistory);
+
+            if (ContainsAny(userMessage, NoveltyTerms) || userMessage.Contains("?"))
+                score += 0.10f;
+
+            if (ContainsAny(agentMessage, NoveltyTerms))
+                score += 0.15f;
+
+            if (TurnCount >= 5 && overlapWithHistory > 0.55f)
+                score -= 0.08f;
+
+            return Mathf.Clamp01(score);
+        }
+
+        private float ComputeComplexity(string userMessage, string agentMessage)
+        {
+            float knowledgeBase = 0.35f;
+            switch (UserKnowledge)
+            {
+                case KnowledgeLevel.Expert:
+                    knowledgeBase = 0.80f;
+                    break;
+                case KnowledgeLevel.Intermediate:
+                    knowledgeBase = 0.55f;
+                    break;
+            }
+
+            float userLengthScore = Mathf.InverseLerp(4f, 35f, LastUserWordCount);
+            float agentLengthScore = Mathf.InverseLerp(20f, 140f, LastAgentWordCount);
+            float userTechnicality = Mathf.Clamp01(
+                CountMatches(userMessage, ExpertTerms) * 0.12f +
+                CountMatches(userMessage, MidTerms) * 0.05f);
+            float agentTechnicality = Mathf.Clamp01(
+                CountMatches(agentMessage, ExpertTerms) * 0.10f +
+                CountMatches(agentMessage, TechnicalTerms) * 0.05f);
+            float imbalanceBoost =
+                AgentTurnCount > 0 && AgentToUserLengthRatio > 1.8f
+                ? Mathf.Min(0.15f, (AgentToUserLengthRatio - 1.8f) * 0.08f)
+                : 0f;
+
+            return Mathf.Clamp01(
+                0.10f +
+                knowledgeBase * 0.25f +
+                userLengthScore * 0.15f +
+                agentLengthScore * 0.15f +
+                userTechnicality * 0.15f +
+                agentTechnicality * 0.15f +
+                imbalanceBoost);
+        }
+
+        private float ComputeCopingPotential(string userMessage)
+        {
+            float score = 0.38f;
+            switch (UserKnowledge)
+            {
+                case KnowledgeLevel.Expert:
+                    score = 0.82f;
+                    break;
+                case KnowledgeLevel.Intermediate:
+                    score = 0.60f;
+                    break;
+            }
+
+            score += Mathf.InverseLerp(3f, 25f, LastUserWordCount) * 0.15f;
+
+            if (userMessage.Contains("?"))
+                score += 0.08f;
+
+            if (ContainsAny(userMessage, GoalTerms))
+                score += 0.06f;
+
+            if (LastUserWordCount <= 3)
+                score -= 0.12f;
+
+            if (AgentTurnCount > 0 && AgentToUserLengthRatio > 2.2f)
+                score -= Mathf.Min(0.25f, (AgentToUserLengthRatio - 2.2f) * 0.12f);
+
+            if (AgentTurnCount > 0 && DialogueBalance < 0.45f)
+                score -= 0.08f;
+
+            return Mathf.Clamp01(score);
+        }
+
+        private float ComputeGoalRelevance(string userMessage, string agentMessage)
+        {
+            float score = 0.25f;
+
+            if (ContainsAny(userMessage, GoalTerms))
+                score += 0.25f;
+
+            if (ContainsAny(agentMessage, GoalTerms))
+                score += 0.15f;
+
+            if (userMessage.Contains("?"))
+                score += 0.10f;
+
+            if (ContainsAny($" {userMessage.ToLowerInvariant()} ", SelfReferenceTerms))
+                score += 0.10f;
+
+            if (ContainsAny(agentMessage, ActionTerms))
+                score += 0.10f;
+
+            if (!string.IsNullOrEmpty(agentMessage))
+                score += ComputeTokenOverlap(userMessage, agentMessage) * 0.15f;
+
+            if (LastUserWordCount <= 3 && !userMessage.Contains("?"))
+                score -= 0.10f;
+
+            return Mathf.Clamp01(score);
+        }
+
+        private void UpdateRecommendedResponseLength()
+        {
+            int minWords = 35;
+            int maxWords = 70;
+            float durationCapSec = 18f;
+            float ratioCap = 2.0f;
+
+            if (LastUserWordCount <= 6)
+            {
+                minWords = 18;
+                maxWords = 45;
+                durationCapSec = 8f;
+                ratioCap = 3.0f;
+            }
+            else if (LastUserWordCount <= 18)
+            {
+                minWords = 35;
+                maxWords = 75;
+                durationCapSec = 14f;
+                ratioCap = 2.4f;
+            }
+            else if (LastUserWordCount <= 35)
+            {
+                minWords = 60;
+                maxWords = 110;
+                durationCapSec = 20f;
+                ratioCap = 2.0f;
+            }
+            else
+            {
+                minWords = 90;
+                maxWords = 150;
+                durationCapSec = 28f;
+                ratioCap = 1.6f;
+            }
+
+            switch (UserKnowledge)
+            {
+                case KnowledgeLevel.Expert:
+                    minWords += 10;
+                    maxWords += 20;
+                    break;
+                case KnowledgeLevel.Novice:
+                    maxWords = Mathf.Min(maxWords, 110);
+                    break;
+            }
+
+            if (CurrentPosture == PostureType.Pedagogical)
+            {
+                minWords = Mathf.Max(15, minWords - 10);
+                maxWords = Mathf.Min(maxWords, 90);
+            }
+            else if (CurrentPosture == PostureType.Empathetic)
+            {
+                maxWords = Mathf.Min(maxWords, 100);
+            }
+
+            if (AgentTurnCount > 0 && AgentToUserLengthRatio > 2.0f)
+            {
+                minWords = Mathf.Max(15, minWords - 10);
+                maxWords = Mathf.Max(minWords + 15, maxWords - 20);
+                durationCapSec = Mathf.Max(6f, durationCapSec - 3f);
+            }
+
+            float userSpeechSec = EstimateSpeechDurationSeconds(LastUserWordCount);
+            float ratioLimitedDurationSec = userSpeechSec > 0f
+                ? Mathf.Max(6f, userSpeechSec * ratioCap)
+                : durationCapSec;
+            float effectiveDurationCapSec = Mathf.Min(durationCapSec, ratioLimitedDurationSec);
+            int durationLimitedMaxWords = Mathf.Max(
+                minWords + 5,
+                Mathf.RoundToInt(effectiveDurationCapSec * EstimatedSpeechRateWordsPerSecond));
+
+            maxWords = Mathf.Min(maxWords, durationLimitedMaxWords);
+            maxWords = Mathf.Max(minWords + 5, maxWords);
+
+            EstimatedLastUserSpeechSec = userSpeechSec;
+            MaxRecommendedAgentSpeechSec = effectiveDurationCapSec;
+            MaxAgentToUserSpeechRatio = ratioCap;
+            RecommendedAgentMinWords = minWords;
+            RecommendedAgentMaxWords = maxWords;
+        }
+
+        private static float EstimateSpeechDurationSeconds(int wordCount)
+        {
+            if (wordCount <= 0) return 0f;
+            return wordCount / EstimatedSpeechRateWordsPerSecond;
+        }
+
+        private static string SanitizeMessage(string message)
+        {
+            return string.IsNullOrWhiteSpace(message)
+                ? string.Empty
+                : message.Replace("\r", " ").Replace("\n", " ").Trim();
+        }
+
+        private static int CountWords(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text)) return 0;
+            return text.Split(WordSeparators, StringSplitOptions.RemoveEmptyEntries).Length;
+        }
+
+        private static int CountMatches(string text, string[] terms)
+        {
+            if (string.IsNullOrEmpty(text)) return 0;
+
+            int matches = 0;
+            string lowerText = text.ToLowerInvariant();
+            foreach (string term in terms)
+            {
+                if (lowerText.Contains(term))
+                    matches++;
+            }
+            return matches;
+        }
+
+        private static bool ContainsAny(string text, string[] terms)
+        {
+            if (string.IsNullOrEmpty(text)) return false;
+
+            string lowerText = text.ToLowerInvariant();
+            foreach (string term in terms)
+            {
+                if (lowerText.Contains(term))
+                    return true;
+            }
+            return false;
+        }
+
+        private static float ComputeTokenOverlap(string left, string right)
+        {
+            HashSet<string> leftTokens = ExtractTokens(left);
+            HashSet<string> rightTokens = ExtractTokens(right);
+
+            if (leftTokens.Count == 0 || rightTokens.Count == 0)
+                return 0f;
+
+            int overlap = 0;
+            foreach (string token in leftTokens)
+            {
+                if (rightTokens.Contains(token))
+                    overlap++;
+            }
+
+            int union = leftTokens.Count + rightTokens.Count - overlap;
+            return union == 0 ? 0f : (float)overlap / union;
+        }
+
+        private static HashSet<string> ExtractTokens(string text)
+        {
+            HashSet<string> tokens = new HashSet<string>();
+            if (string.IsNullOrWhiteSpace(text)) return tokens;
+
+            string[] rawTokens = text.ToLowerInvariant()
+                                     .Split(WordSeparators, StringSplitOptions.RemoveEmptyEntries);
+            foreach (string token in rawTokens)
+            {
+                if (token.Length >= 3)
+                    tokens.Add(token);
+            }
+
+            return tokens;
         }
 
         // ---------------------------------------------------------------

@@ -171,11 +171,13 @@ public class LMStudioDialogManager : MonoBehaviour
         var res = await whisper.GetTextAsync(audioChunk.Data, audioChunk.Frequency, audioChunk.Channels);
         if (res == null) return;
 
-        var text = res.Result;
+        var text = string.IsNullOrWhiteSpace(res.Result) ? string.Empty : res.Result.Trim();
+        if (string.IsNullOrEmpty(text)) return;
+        string displayText = text;
         if (printLanguage)
-            text += $"\n\nLanguage: {res.Language}";
+            displayText += $"\n\nLanguage: {res.Language}";
 
-        textPanel.GetComponentInChildren<Text>().text = text;
+        textPanel.GetComponentInChildren<Text>().text = displayText;
         HandleUserInput(text);
     }
 
@@ -197,16 +199,17 @@ public class LMStudioDialogManager : MonoBehaviour
     private void HandleUserInput(string userText)
     {
         if (string.IsNullOrEmpty(userText)) return;
+        userText = userText.Trim();
 
         // 1. Métriques d'engagement + estimation niveau (VI2)
         model.RecordUserTurn(userText);
 
         // 2. Fenêtre conversationnelle
-        conversationList.Enqueue(userText);
+        conversationList.Enqueue("Utilisateur: " + userText);
         if (conversationList.Count > 10)
             conversationList.Dequeue();
 
-        string fullconv = string.Join(" ", conversationList);
+        string fullconv = string.Join("\n", conversationList);
 
         // 3. Envoi au LLM avec system prompt dynamique
         SendToChat(fullconv);
@@ -254,7 +257,7 @@ public class LMStudioDialogManager : MonoBehaviour
         Debug.Log("[ENGAGEMENT] " + model.GetEngagementSummary());
 
         // Fenêtre mémoire agent
-        conversationList.Enqueue(_response);
+        conversationList.Enqueue("Agent: " + _response);
         if (conversationList.Count > 10)
             conversationList.Dequeue();
 

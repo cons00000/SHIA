@@ -27,6 +27,20 @@ public class InteractionLogger : MonoBehaviour
         public string Posture;
         public string MotivationalProfile;
         public string Condition;    // Adaptive / Control
+        public float  Novelty;
+        public float  Complexity;
+        public float  CopingPotential;
+        public float  GoalRelevance;
+        public float  AverageUserLength;
+        public float  AverageAgentLength;
+        public int    LastUserWords;
+        public int    LastAgentWords;
+        public float  EstimatedLastUserSpeechSec;
+        public float  EstimatedLastAgentSpeechSec;
+        public float  MaxRecommendedAgentSpeechSec;
+        public float  MaxAgentToUserSpeechRatio;
+        public float  DialogueBalance;
+        public float  AgentToUserRatio;
         public float  TimestampSec;
     }
 
@@ -50,6 +64,20 @@ public class InteractionLogger : MonoBehaviour
             KnowledgeLevel     = model.UserKnowledge.ToString(),
             Posture            = model.CurrentPosture.ToString(),
             MotivationalProfile = model.ActiveProfile.ToString(),
+            Novelty            = model.Novelty,
+            Complexity         = model.Complexity,
+            CopingPotential    = model.CopingPotential,
+            GoalRelevance      = model.GoalRelevance,
+            AverageUserLength  = model.AverageMessageLength,
+            AverageAgentLength = model.AverageAgentMessageLength,
+            LastUserWords      = model.LastUserWordCount,
+            LastAgentWords     = model.LastAgentWordCount,
+            EstimatedLastUserSpeechSec = model.EstimatedLastUserSpeechSec,
+            EstimatedLastAgentSpeechSec = model.EstimatedLastAgentSpeechSec,
+            MaxRecommendedAgentSpeechSec = model.MaxRecommendedAgentSpeechSec,
+            MaxAgentToUserSpeechRatio = model.MaxAgentToUserSpeechRatio,
+            DialogueBalance    = model.DialogueBalance,
+            AgentToUserRatio   = model.AgentToUserLengthRatio,
             TimestampSec       = Time.time
         });
     }
@@ -73,13 +101,24 @@ public class InteractionLogger : MonoBehaviour
         using (var sw = new StreamWriter(path, false, System.Text.Encoding.UTF8))
         {
             sw.WriteLine("TurnIndex,Role,MessageLength,ContainsQuestion," +
-                         "KnowledgeLevel,Posture,MotivationalProfile,Condition,TimestampSec");
+                         "KnowledgeLevel,Posture,MotivationalProfile,Condition," +
+                         "Novelty,Complexity,CopingPotential,GoalRelevance," +
+                         "AverageUserLength,AverageAgentLength,LastUserWords,LastAgentWords," +
+                         "EstimatedLastUserSpeechSec,EstimatedLastAgentSpeechSec," +
+                         "MaxRecommendedAgentSpeechSec,MaxAgentToUserSpeechRatio," +
+                         "DialogueBalance,AgentToUserRatio,TimestampSec");
 
             foreach (var r in _records)
             {
                 sw.WriteLine($"{r.TurnIndex},{r.Role},{r.MessageLength}," +
                              $"{r.ContainsQuestion},{r.KnowledgeLevel},{r.Posture}," +
-                             $"{r.MotivationalProfile},{r.Condition},{r.TimestampSec:F2}");
+                             $"{r.MotivationalProfile},{r.Condition}," +
+                             $"{r.Novelty:F2},{r.Complexity:F2},{r.CopingPotential:F2},{r.GoalRelevance:F2}," +
+                             $"{r.AverageUserLength:F1},{r.AverageAgentLength:F1}," +
+                             $"{r.LastUserWords},{r.LastAgentWords}," +
+                             $"{r.EstimatedLastUserSpeechSec:F2},{r.EstimatedLastAgentSpeechSec:F2}," +
+                             $"{r.MaxRecommendedAgentSpeechSec:F2},{r.MaxAgentToUserSpeechRatio:F2}," +
+                             $"{r.DialogueBalance:F2},{r.AgentToUserRatio:F2},{r.TimestampSec:F2}");
             }
         }
 

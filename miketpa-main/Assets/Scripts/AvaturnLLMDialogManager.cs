@@ -73,6 +73,9 @@ public class AvaturnLLMDialogManager : MonoBehaviour
         = ComputationalModel.MotivationalProfile.Promotion;
 
     private ComputationalModel computationalModel;
+
+    [Header("Logging")]
+    public InteractionLogger logger;
     // ---------------------------------------------------------------
 
     void Start()
@@ -239,6 +242,7 @@ public class AvaturnLLMDialogManager : MonoBehaviour
 
         // Mise a jour CPM + posture non-verbale
         computationalModel.RecordAgentTurn(_response);
+        if (logger != null) logger.LogTurn("Agent", _response, computationalModel);
         ApplySchererPosture(computationalModel.CurrentPosture);
         Debug.Log("[ENGAGEMENT] " + computationalModel.GetEngagementSummary());
 

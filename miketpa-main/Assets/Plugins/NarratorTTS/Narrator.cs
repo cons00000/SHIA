@@ -7,10 +7,9 @@ namespace ACTA
 {
     public class Narrator : MonoBehaviour
     {
+        public enum CONTEXT { TUTORIAL, TRAINING_ANN, TRAINING_TUT, ASSESSMENT };
 
-        public enum CONTEXT
-        { TUTORIAL, TRAINING_ANN, TRAINING_TUT, ASSESSMENT };
-
+#if UNITY_STANDALONE_WIN
         [DllImport("WindowsTTS")]
         public static extern void initSpeech();
 
@@ -19,8 +18,6 @@ namespace ACTA
 
         [DllImport("WindowsTTS")]
         public static extern void addToSpeechQueue(byte[] s);
-        //[DllImport("WindowsVoice", CharSet=CharSet.Unicode, CallingConvention = CallingConvention.Cdecl)]
-        //public static extern void addToSpeechQueue([MarshalAs(UnmanagedType.LPStr)] string s);
 
         [DllImport("WindowsTTS")]
         public static extern void clearSpeechQueue();
@@ -33,52 +30,59 @@ namespace ACTA
 
         [DllImport("WindowsTTS")]
         public static extern bool isSpeaking();
+#endif
 
         public CONTEXT mode;
-
         public static Narrator theVoice = null;
-
         public int voiceIdx = 0;
 
         static List<string> keyValue = new List<string>();
-
         static List<string> keyValueOnTask = new List<string>();
         static int currIdx = 0;
 
         void OnEnable()
         {
+#if UNITY_STANDALONE_WIN
             if (theVoice == null)
             {
                 theVoice = this;
                 Debug.Log("Initializing speech");
                 initSpeech();
             }
+#endif
         }
 
         void OnDestroy()
         {
+#if UNITY_STANDALONE_WIN
             if (theVoice == this)
             {
                 Debug.Log("Destroying speech");
                 destroySpeech();
                 theVoice = null;
             }
+#endif
         }
 
         public static void speak(string msg, bool interruptable = false)
         {
-            //Encoding encoding = System.Text.Encoding.GetEncoding(System.Threading.Thread.CurrentThread.CurrentCulture.TextInfo.ANSICodePage);
+#if UNITY_STANDALONE_WIN
             Encoding encoding = System.Text.Encoding.GetEncoding(Encoding.UTF8.CodePage);
             var data = encoding.GetBytes(msg);
             if (interruptable)
                 clearSpeechQueue();
             addToSpeechQueue(data);
-            //addToSpeechQueue(msg);
+#else
+            // Optionnel : macOS ou Linux TTS minimal
+            Debug.Log("[TTS] " + msg);
+#endif
         }
 
         private void Awake()
         {
+#if UNITY_STANDALONE_WIN
             changeVoice(voiceIdx);
+#endif
         }
 
         public void TestSpeech()
@@ -86,24 +90,11 @@ namespace ACTA
             Narrator.speak("Do you hear me?", false);
         }
 
-        /*private void Update()
-        {
-            //FOR TESTING
-            
-            if (Input.GetKeyDown(KeyCode.Space))
-            {
-                Narrator.speak("Is there any problem in there?", false);
-            }
-            //
-            Narrator.speak("Hello", true);
-        }*/
-
         private void OnApplicationQuit()
         {
+#if UNITY_STANDALONE_WIN
             Narrator.destroySpeech();
+#endif
         }
-
-
     }
-
 }

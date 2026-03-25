@@ -68,6 +68,7 @@ public class LMStudioDialogManager : MonoBehaviour
     //  MODÈLE COMPUTATIONNEL (CPM + Profil)
     // ---------------------------------------------------------------
     private ComputationalModel model;
+    private InteractionLogger logger;
 
     // ---------------------------------------------------------------
     //  CONDITION EXPÉRIMENTALE
@@ -84,6 +85,11 @@ public class LMStudioDialogManager : MonoBehaviour
 
         // Initialisation du modèle avec la condition choisie dans l'Inspector
         model = new ComputationalModel { ExperimenterProfile = motivationalProfile };
+
+        // Récupération du logger (doit être sur le même GameObject)
+        logger = GetComponent<InteractionLogger>();
+        if (logger == null)
+            Debug.LogError("[LMStudioDialogManager] InteractionLogger introuvable sur ce GameObject !");
 
         InformationDisplay("");
         textPanel.GetComponentInChildren<Text>().text = "";
@@ -203,6 +209,7 @@ public class LMStudioDialogManager : MonoBehaviour
 
         // 1. Métriques d'engagement + estimation niveau (VI2)
         model.RecordUserTurn(userText);
+        logger?.LogTurn("User", userText, model);
 
         // 2. Fenêtre conversationnelle
         conversationList.Enqueue("Utilisateur: " + userText);
@@ -251,6 +258,7 @@ public class LMStudioDialogManager : MonoBehaviour
 
         // Mise à jour du modèle CPM depuis la réponse agent + posture non-verbale
         model.RecordAgentTurn(_response);
+        logger?.LogTurn("Agent", _response, model);
         ApplySchererPosture(model.CurrentPosture);
 
         // Log d'engagement (VD1)

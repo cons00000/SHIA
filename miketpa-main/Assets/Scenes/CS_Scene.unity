@@ -14,17 +14,17 @@ OcclusionCullingSettings:
 RenderSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 10
-  m_Fog: 0
-  m_FogColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  m_Fog: 1
+  m_FogColor: {r: 0.95, g: 0.95, b: 0.93, a: 1}
   m_FogMode: 3
-  m_FogDensity: 0.01
+  m_FogDensity: 0.015
   m_LinearFogStart: 0
   m_LinearFogEnd: 300
-  m_AmbientSkyColor: {r: 0.212, g: 0.227, b: 0.259, a: 1}
-  m_AmbientEquatorColor: {r: 0.114, g: 0.125, b: 0.133, a: 1}
-  m_AmbientGroundColor: {r: 0.047, g: 0.043, b: 0.035, a: 1}
-  m_AmbientIntensity: 1
-  m_AmbientMode: 0
+  m_AmbientSkyColor: {r: 0.8, g: 0.768, b: 0.704, a: 0.8}
+  m_AmbientEquatorColor: {r: 0.23, g: 0.2, b: 0.18, a: 1}
+  m_AmbientGroundColor: {r: 0.08, g: 0.06, b: 0.05, a: 1}
+  m_AmbientIntensity: 0.8
+  m_AmbientMode: 3
   m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
   m_SkyboxMaterial: {fileID: 2100000, guid: 7b621f3d20f81af4785f8576da7910e2, type: 2}
   m_HaloStrength: 0.5
@@ -35,7 +35,7 @@ RenderSettings:
   m_DefaultReflectionMode: 0
   m_DefaultReflectionResolution: 128
   m_ReflectionBounces: 1
-  m_ReflectionIntensity: 1
+  m_ReflectionIntensity: 0.85
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 705507994}
   m_UseRadianceAmbientProbe: 0
@@ -133,7 +133,7 @@ GameObject:
   - component: {fileID: 154348296}
   - component: {fileID: 154348295}
   m_Layer: 0
-  m_Name: Plane
+  m_Name: CafeBackdrop
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -184,7 +184,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: bd8c63fe3bde5ac4eb5c451eb61f773c, type: 2}
+  - {fileID: 2100000, guid: 15d2c88f6cf94a3e90435c8b6518f7dd, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -223,8 +223,8 @@ Transform:
   m_GameObject: {fileID: 154348294}
   serializedVersion: 2
   m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: 0, y: 1.83, z: 6.66}
-  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_LocalPosition: {x: 0, y: 2.02, z: 6.75}
+  m_LocalScale: {x: 1.36, y: 1, z: 0.98}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
@@ -256,8 +256,8 @@ Light:
   m_Enabled: 1
   serializedVersion: 11
   m_Type: 1
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_Intensity: 1.26
+  m_Color: {r: 1, g: 0.93, b: 0.84, a: 1}
+  m_Intensity: 0.72
   m_Range: 10
   m_SpotAngle: 30
   m_InnerSpotAngle: 21.80208
@@ -319,8 +319,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 705507993}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.32648087, y: -0.054190055, z: -0.9415698, w: -0.06261062}
-  m_LocalPosition: {x: 0, y: 3, z: 0}
+  m_LocalRotation: {x: 0.38437667, y: -0.24036124, z: 0.09991268, w: 0.885088}
+  m_LocalPosition: {x: 0, y: 4.2, z: -1.5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -362,7 +362,7 @@ Camera:
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 2
-  m_BackGroundColor: {r: 0.43952474, g: 0.5731058, b: 0.7830189, a: 0}
+  m_BackGroundColor: {r: 0.119, g: 0.097, b: 0.09, a: 0}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
@@ -470,7 +470,7 @@ Camera:
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 1
-  m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
+  m_BackGroundColor: {r: 0.119, g: 0.097, b: 0.09, a: 0}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
@@ -995,7 +995,7 @@ Camera:
   m_Enabled: 1
   serializedVersion: 2
   m_ClearFlags: 2
-  m_BackGroundColor: {r: 0.43952474, g: 0.5731058, b: 0.7830189, a: 0}
+  m_BackGroundColor: {r: 0.119, g: 0.097, b: 0.09, a: 0}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
@@ -1036,6 +1036,66 @@ Camera:
   m_OcclusionCulling: 1
   m_StereoConvergence: 10
   m_StereoSeparation: 0.022
+--- !u!1 &2089000001
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2089000002}
+  - component: {fileID: 2089000003}
+  m_Layer: 0
+  m_Name: ChicCafeDecorator
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2089000002
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2089000001}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2089000003
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2089000001}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f9c1b93f5fb4f6eb44258a72c7872f1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  wallColor: {r: 0.97, g: 0.95, b: 0.91, a: 1}
+  accentColor: {r: 0.82, g: 0.74, b: 0.62, a: 1}
+  furnitureColor: {r: 0.88, g: 0.83, b: 0.76, a: 1}
+  greeneryColor: {r: 0.35, g: 0.55, b: 0.3, a: 1}
+  glassColor: {r: 0.85, g: 0.92, b: 0.95, a: 1}
+  outdoorLightColor: {r: 0.9, g: 0.97, b: 1, a: 1}
+  outdoorLightIntensity: 2.2
+  sunDirection: {x: -0.39036, y: -0.78072, z: 0.48795}
+  ambientLightColor: {r: 1, g: 0.96, b: 0.88, a: 1}
+  ambientIntensity: 0.8
+  enableFog: 1
+  fogColor: {r: 0.95, g: 0.95, b: 0.93, a: 1}
+  fogDensity: 0.015
+  sunLight: {fileID: 0}
+  fillLight: {fileID: 0}
+  mainCamera: {fileID: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -1046,3 +1106,4 @@ SceneRoots:
   - {fileID: 1533015125}
   - {fileID: 1064046513}
   - {fileID: 1192350120}
+  - {fileID: 2089000002}

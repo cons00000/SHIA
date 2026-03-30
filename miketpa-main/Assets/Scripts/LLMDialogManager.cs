@@ -14,11 +14,11 @@ using Button = UnityEngine.UI.Button;
 using Debug = UnityEngine.Debug;
 using Text = UnityEngine.UI.Text;
 /*
-* La classe LLMDialogManager permet de centraliser les fonctionnalités liés à l'aspect conversationnel de l'agent en Full Audio en utilisant un LLM hébergé sur un serveur distant. 
-* ATTENTION : pour faire fonctionner le plugin Whisper de Macoron, il faut ajouter les modèles dans le répertoire 
-* StreamingAssets. Allez voir les pages dédiées de ces modules pour plus d'explications. Ils ne sont pas fournis par défaut car ils prennent
+* La classe LLMDialogManager permet de centraliser les fonctionnalitï¿½s liï¿½s ï¿½ l'aspect conversationnel de l'agent en Full Audio en utilisant un LLM hï¿½bergï¿½ sur un serveur distant. 
+* ATTENTION : pour faire fonctionner le plugin Whisper de Macoron, il faut ajouter les modï¿½les dans le rï¿½pertoire 
+* StreamingAssets. Allez voir les pages dï¿½diï¿½es de ces modules pour plus d'explications. Ils ne sont pas fournis par dï¿½faut car ils prennent
 * trop de place.
-* Pour le fonctionnement de MaryTTS, le serveur MaryTTS doit s'exécuter depuis le répertoire StreamingAssets et n'est pas fourni également
+* Pour le fonctionnement de MaryTTS, le serveur MaryTTS doit s'exï¿½cuter depuis le rï¿½pertoire StreamingAssets et n'est pas fourni ï¿½galement
 */
 public class LLMDialogManager : MonoBehaviour
 {
@@ -217,18 +217,26 @@ public class LLMDialogManager : MonoBehaviour
 
         if (uwr.result != UnityWebRequest.Result.Success)
         {
-            Debug.Log("Error While Sending: " + uwr.error);
+            Debug.LogError("Error While Sending: " + uwr.error);
         }
         else
         {
             Debug.Log("Received: " + uwr.downloadHandler.text);
             _response = uwr.downloadHandler.text;
-            //retrieve response from the JSON
-            int pos = _response.IndexOf("response\":");
-            Debug.Log(pos);
-            int endpos = _response.Substring(pos + 11).IndexOf("\"");
-            Debug.Log(endpos);
-            _response = _response.Substring(pos + 11, endpos);
+
+            // OpenWebUI retourne choices[0].message.content
+            string searchKey = "\"content\":\"";
+            int pos = _response.IndexOf(searchKey);
+            if (pos == -1)
+            {
+                Debug.LogError("Champ 'content' introuvable dans : " + _response);
+                yield break;
+            }
+            int start = pos + searchKey.Length;
+            int end = _response.IndexOf("\"", start);
+            _response = _response.Substring(start, end - start);
+
+            Debug.Log("Response parsed: " + _response);
             InformationDisplay(_response);
             _response = ProcessAffectiveContent(_response);
             conversationList.Enqueue(_response);
@@ -265,13 +273,13 @@ public class LLMDialogManager : MonoBehaviour
 
 
     /*
-     * Cette méthode permet de jouer un fichier audio depuis le répertoire Resources/Sounds dont le nom est de la forme <entier>.mp3 
+     * Cette mï¿½thode permet de jouer un fichier audio depuis le rï¿½pertoire Resources/Sounds dont le nom est de la forme <entier>.mp3 
      */
     public void PlayAudio(int a)
     {
         try
         {
-            //Charge un fichier audio depuis le répertoire Resources
+            //Charge un fichier audio depuis le rï¿½pertoire Resources
             AudioClip music = (AudioClip)Resources.Load("Sounds/" + a);
             audioSource.PlayOneShot(music, volume);
         }
@@ -282,10 +290,10 @@ public class LLMDialogManager : MonoBehaviour
     }
 
     /*
-     * Cette méthode permet de demander à MaryTTS de générer un audio, puis de le jouer, à partir du texte
-     * MaryTTS server doit donc être lancé sur la machine.
-     * Pour l'instant, il est attendu que le répertoire marytts-5.2 soit copié dans le répertoire StreamingAssets du projet 
-     * et que MaryTTS-Server soit exécuté à partir de /marytts-5.2/bin/ 
+     * Cette mï¿½thode permet de demander ï¿½ MaryTTS de gï¿½nï¿½rer un audio, puis de le jouer, ï¿½ partir du texte
+     * MaryTTS server doit donc ï¿½tre lancï¿½ sur la machine.
+     * Pour l'instant, il est attendu que le rï¿½pertoire marytts-5.2 soit copiï¿½ dans le rï¿½pertoire StreamingAssets du projet 
+     * et que MaryTTS-Server soit exï¿½cutï¿½ ï¿½ partir de /marytts-5.2/bin/ 
      */
     public void PlayAudio(string text)
     {
@@ -373,7 +381,7 @@ public class LLMDialogManager : MonoBehaviour
 
 
     /*
-     * Cette méthode affiche du texte dans le panneau d'affichage à gauche de l'UI
+     * Cette mï¿½thode affiche du texte dans le panneau d'affichage ï¿½ gauche de l'UI
      */
     public void InformationDisplay(string s)
     {
@@ -383,7 +391,7 @@ public class LLMDialogManager : MonoBehaviour
 
     }
     /*
-     * Cette méthode affiche le texte de la question dans la partie basse de l'UI
+     * Cette mï¿½thode affiche le texte de la question dans la partie basse de l'UI
      */
     public void DisplayQuestion(string s)
     {
@@ -399,7 +407,7 @@ public class LLMDialogManager : MonoBehaviour
 
 
     /*
-     * Cette méthode permet de faire jouer des AUs à l'agent
+     * Cette mï¿½thode permet de faire jouer des AUs ï¿½ l'agent
      */
     public void DisplayAUs(int[] aus, int[] intensities, float duration)
     {

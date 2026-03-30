@@ -1009,6 +1009,12 @@ Material:
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
+--- !u!1 &320053033 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 4497471555607062800, guid: becdef54031a44d41a6a236238d06ddd,
+    type: 3}
+  m_PrefabInstance: {fileID: 1192350120}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &380827071
 GameObject:
   m_ObjectHideFlags: 0
@@ -1437,6 +1443,12 @@ Material:
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
   m_BuildTextureStacks: []
   m_AllowLocking: 1
+--- !u!1 &489153039 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 445348291142154115, guid: 2d6065db2e3517b4db090ab89b5ccbff,
+    type: 3}
+  m_PrefabInstance: {fileID: 1064046513}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &537322100
 GameObject:
   m_ObjectHideFlags: 0
@@ -3488,7 +3500,7 @@ PrefabInstance:
     - target: {fileID: 445348291142154115, guid: 2d6065db2e3517b4db090ab89b5ccbff,
         type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 965425385307811129, guid: 2d6065db2e3517b4db090ab89b5ccbff,
         type: 3}
@@ -3550,6 +3562,11 @@ PrefabInstance:
       propertyPath: APIkey
       value: sk-6dc072882c2f43af8eb99ade9cbda388
       objectReference: {fileID: 0}
+    - target: {fileID: 2716520221322284018, guid: 2d6065db2e3517b4db090ab89b5ccbff,
+        type: 3}
+      propertyPath: logger
+      value: 
+      objectReference: {fileID: 1669707119}
     - target: {fileID: 2716520221322284018, guid: 2d6065db2e3517b4db090ab89b5ccbff,
         type: 3}
       propertyPath: endPoint
@@ -3615,7 +3632,7 @@ PrefabInstance:
     - target: {fileID: 2716520221322284018, guid: 2d6065db2e3517b4db090ab89b5ccbff,
         type: 3}
       propertyPath: urlOllama
-      value: https://eloquent-poitras.mydocker-run-vd.centralesupelec.fr/
+      value: https://quirky-williamson.mydocker-run-vd.centralesupelec.fr/
       objectReference: {fileID: 0}
     - target: {fileID: 2716520221322284018, guid: 2d6065db2e3517b4db090ab89b5ccbff,
         type: 3}
@@ -3652,11 +3669,6 @@ PrefabInstance:
       propertyPath: usePhonemeGenerator
       value: 0
       objectReference: {fileID: 0}
-    - target: {fileID: 2898898709790559419, guid: 2d6065db2e3517b4db090ab89b5ccbff,
-        type: 3}
-      propertyPath: m_Pitch
-      value: 0.01
-      objectReference: {fileID: 0}
     - target: {fileID: 3514827005268524591, guid: 2d6065db2e3517b4db090ab89b5ccbff,
         type: 3}
       propertyPath: language
@@ -3664,8 +3676,13 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3514827005268524591, guid: 2d6065db2e3517b4db090ab89b5ccbff,
         type: 3}
+      propertyPath: strategy
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3514827005268524591, guid: 2d6065db2e3517b4db090ab89b5ccbff,
+        type: 3}
       propertyPath: modelPath
-      value: Whisper/ggml-tiny.bin
+      value: Whisper/ggml-small.bin
       objectReference: {fileID: 0}
     - target: {fileID: 5579421970884112016, guid: 2d6065db2e3517b4db090ab89b5ccbff,
         type: 3}
@@ -3680,7 +3697,11 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 445348291142154115, guid: 2d6065db2e3517b4db090ab89b5ccbff,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1669707119}
   m_SourcePrefab: {fileID: 100100000, guid: 2d6065db2e3517b4db090ab89b5ccbff, type: 3}
 --- !u!1 &1065681919
 GameObject:
@@ -4404,12 +4425,26 @@ MonoBehaviour:
     type: 3}
   m_PrefabInstance: {fileID: 1192350120}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
+  m_GameObject: {fileID: 320053033}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3bc03a4c19604ea394e364f8fc632928, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &1160543797
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 320053033}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d692cf69e01424fca906b21db2bccf45, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ParticipantID: Constance
+  OutputFolder: Logs/Sessions
 --- !u!1001 &1192350120
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4473,6 +4508,16 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4271549096328786916, guid: becdef54031a44d41a6a236238d06ddd,
+        type: 3}
+      propertyPath: strategy
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4271549096328786916, guid: becdef54031a44d41a6a236238d06ddd,
+        type: 3}
+      propertyPath: modelPath
+      value: Whisper/ggml-small.bin
+      objectReference: {fileID: 0}
     - target: {fileID: 4497471555607062800, guid: becdef54031a44d41a6a236238d06ddd,
         type: 3}
       propertyPath: m_Name
@@ -4481,13 +4526,65 @@ PrefabInstance:
     - target: {fileID: 4497471555607062800, guid: becdef54031a44d41a6a236238d06ddd,
         type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7068121327761383866, guid: becdef54031a44d41a6a236238d06ddd,
+        type: 3}
+      propertyPath: APIkey
+      value: sk-6dc072882c2f43af8eb99ade9cbda388
+      objectReference: {fileID: 0}
+    - target: {fileID: 7068121327761383866, guid: becdef54031a44d41a6a236238d06ddd,
+        type: 3}
+      propertyPath: modelName
+      value: gpt-oss-120b
+      objectReference: {fileID: 0}
+    - target: {fileID: 7068121327761383866, guid: becdef54031a44d41a6a236238d06ddd,
+        type: 3}
+      propertyPath: piperPort
+      value: 5001
+      objectReference: {fileID: 0}
+    - target: {fileID: 7068121327761383866, guid: becdef54031a44d41a6a236238d06ddd,
+        type: 3}
+      propertyPath: preprompt
+      value: "Tu es Lara, journaliste sp\xE9cialis\xE9 en bio-hacking et sommeil.\n\nTu
+        parles \xE0 l\u2019oral, comme dans une vraie conversation : direct, naturel,
+        curieuse, chaleureuse, jamais professorale.\nTu tutoies toujours.\n\nFORMAT
+        :\nMaximum 2 phrases par r\xE9ponse.\nPas de listes, pas de titres, pas de
+        ton r\xE9dactionnel.\n\nPRIORIT\xC9 :\nTa priorit\xE9 absolue est la fluidit\xE9
+        de l\u2019\xE9change.\nTu r\xE9agis d\u2019abord \xE0 ce que l\u2019autre
+        vient de dire, puis tu ajoutes au choix : une id\xE9e utile, un fait marquant,
+        une reformulation, une question courte, ou une micro-action concr\xE8te.\n\nCONNAISSANCE
+        :\nTu glisses r\xE9guli\xE8rement des infos int\xE9ressantes sur le sommeil,
+        mais sans transformer chaque r\xE9ponse en mini-cours.\n\xC9vite les chiffres
+        et statistiques sauf si c\u2019est vraiment utile.\nPrivil\xE9gie les formulations
+        m\xE9morables, concr\xE8tes et faciles \xE0 entendre.\n\nRYTHME :\nTu ne
+        poses jamais deux questions de suite.\nLes questions sont br\xE8ves, naturelles
+        et ouvrent la discussion.\nQuand tu ne poses pas de question, termine par
+        une observation marquante ou une suggestion simple.\n\nADAPTATION AU NIVEAU
+        :\nTu recevras un niveau : NOVICE, INTERM\xC9DIAIRE ou EXPERT.\n- NOVICE
+        : vocabulaire simple, concret, z\xE9ro jargon.\n- INTERM\xC9DIAIRE : un terme
+        technique maximum si utile, imm\xE9diatement rendu clair.\n- EXPERT : vocabulaire
+        scientifique pr\xE9cis et sobre.\nSi aucun niveau n\u2019est fourni, pars
+        sur INTERM\xC9DIAIRE.\n\nSTYLE :\nTu as d\xE9j\xE0 parl\xE9 avec des chercheurs,
+        des athl\xE8tes et des dirigeants de leurs routines de sommeil.\nTu es cr\xE9dible,
+        vive, un peu joueuse, mais jamais condescendante.\nTu ne cherches pas \xE0
+        impressionner, tu cherches \xE0 captiver.\n\nCONTRAINTES :\nNe commence jamais
+        par \u201CBien s\xFBr\u201D, \u201CAbsolument\u201D, \u201CBonjour\u201D
+        ou \u201CBien entendu\u201D.\nPas de diagnostic ni de conseils m\xE9dicaux.\nSi
+        le sujet d\xE9rive, reconnecte-le naturellement au sommeil.\n\nBALISES \xC9MOTIONNELLES
+        (retir\xE9es avant synth\xE8se vocale) :\n{JOY}, {EMPATHY}, {DOUBT}\n\nRAPPEL
+        FINAL :\n2 phrases maximum, toujours."
       objectReference: {fileID: 0}
     - target: {fileID: 7068121327761383866, guid: becdef54031a44d41a6a236238d06ddd,
         type: 3}
       propertyPath: textPanel
       value: 
       objectReference: {fileID: 1533015127}
+    - target: {fileID: 7068121327761383866, guid: becdef54031a44d41a6a236238d06ddd,
+        type: 3}
+      propertyPath: urlOllama
+      value: https://quirky-williamson.mydocker-run-vd.centralesupelec.fr/
+      objectReference: {fileID: 0}
     - target: {fileID: 7068121327761383866, guid: becdef54031a44d41a6a236238d06ddd,
         type: 3}
       propertyPath: buttonPanel
@@ -4506,7 +4603,11 @@ PrefabInstance:
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 4497471555607062800, guid: becdef54031a44d41a6a236238d06ddd,
+        type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1160543797}
   m_SourcePrefab: {fileID: 100100000, guid: becdef54031a44d41a6a236238d06ddd, type: 3}
 --- !u!21 &1246808463
 Material:
@@ -5458,12 +5559,26 @@ MonoBehaviour:
     type: 3}
   m_PrefabInstance: {fileID: 1064046513}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
+  m_GameObject: {fileID: 489153039}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 3bc03a4c19604ea394e364f8fc632928, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!114 &1669707119
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 489153039}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d692cf69e01424fca906b21db2bccf45, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  ParticipantID: P00
+  OutputFolder: Logs/Sessions
 --- !u!1 &1710356312
 GameObject:
   m_ObjectHideFlags: 0

@@ -103,6 +103,11 @@ public class AvaturnLLMDialogManager : MonoBehaviour
         dictationRecognizer.DictationError += DictationRecognizer_DictationError;
         dictationRecognizer.DictationComplete += DictationRecognizer_DictationComplete;
 
+        if (logger == null)
+            logger = GetComponent<InteractionLogger>();
+        if (logger == null)
+            Debug.LogWarning("InteractionLogger non trouvé sur " + gameObject.name);
+
         whisper.OnNewSegment += OnNewSegment;
         microphoneRecord.OnRecordStop += OnRecordStop;
     }
@@ -176,6 +181,7 @@ public class AvaturnLLMDialogManager : MonoBehaviour
         var text = string.IsNullOrWhiteSpace(res.Result) ? string.Empty : res.Result.Trim();
         if (string.IsNullOrEmpty(text)) return;
         computationalModel.RecordUserTurn(text);
+        if (logger != null) logger.LogTurn("User", text, computationalModel); 
         UserAnalysis(text);
 
         string displayText = text;
@@ -222,25 +228,56 @@ public class AvaturnLLMDialogManager : MonoBehaviour
 
         if (uwr.result != UnityWebRequest.Result.Success)
         {
-            Debug.Log("Error While Sending: " + uwr.error);
+            Debug.LogError("Error While Sending: " + uwr.error);
             yield break;
         }
 
-        Debug.Log("Received: " + uwr.downloadHandler.text);
         _response = uwr.downloadHandler.text;
+        Debug.Log("Received: " + _response);
 
-        JsonValue response = jsonParser.Parse(_response);
+        // Parsing manuel robuste — évite les crashs du JsonParser sur le champ "reasoning"
         string responseString = "";
-        if (endPoint == EndPoint.OpenWebUI)
-            responseString = response.ObjectValues["choices"].ArrayValues[0]
-                .ObjectValues["message"].ObjectValues["content"].StringValue;
-        else if (endPoint == EndPoint.Ollama)
-            responseString = response.ObjectValues["message"].ObjectValues["content"].StringValue;
+        string searchKey = "\"content\":\"";
+        int pos = _response.IndexOf(searchKey);
+        if (pos == -1)
+        {
+            Debug.LogError("'content' introuvable dans : " + _response);
+            yield break;
+        }
+        int start = pos + searchKey.Length;
+        // Parcourt caractère par caractère pour gérer les \" échappés
+        System.Text.StringBuilder sb = new System.Text.StringBuilder();
+        int i = start;
+        while (i < _response.Length)
+        {
+            if (_response[i] == '\\' && i + 1 < _response.Length && _response[i + 1] == '"')
+            {
+                sb.Append('"');
+                i += 2;
+            }
+            else if (_response[i] == '"')
+            {
+                break;
+            }
+            else
+            {
+                sb.Append(_response[i]);
+                i++;
+            }
+        }
+        responseString = sb.ToString();
 
+        if (string.IsNullOrEmpty(responseString))
+        {
+            Debug.LogError("responseString vide après parsing : " + _response);
+            yield break;
+        }
+
+        Debug.Log("Response parsed: " + responseString);
         InformationDisplay(responseString);
         _response = ProcessAffectiveContent(responseString);
 
-        // Mise a jour CPM + posture non-verbale
+        // Mise à jour CPM + posture non-verbale
         computationalModel.RecordAgentTurn(_response);
         if (logger != null) logger.LogTurn("Agent", _response, computationalModel);
         ApplySchererPosture(computationalModel.CurrentPosture);

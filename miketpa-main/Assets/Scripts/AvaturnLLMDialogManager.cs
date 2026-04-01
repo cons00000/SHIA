@@ -127,6 +127,8 @@ public class AvaturnLLMDialogManager : MonoBehaviour
         if (string.IsNullOrEmpty(text)) return;
         textPanel.GetComponentInChildren<Text>().text = text;
         computationalModel.RecordUserTurn(text);
+        if (logger != null) logger.LogTurn("User", text, computationalModel);
+        UserAnalysis(text);
 
         JsonValue userTurn = new JsonValue(JsonType.Object);
         JsonValue userRole = new JsonValue(JsonType.String);
@@ -274,7 +276,6 @@ public class AvaturnLLMDialogManager : MonoBehaviour
         }
 
         Debug.Log("Response parsed: " + responseString);
-        InformationDisplay(responseString);
         _response = ProcessAffectiveContent(responseString);
 
         // Mise à jour CPM + posture non-verbale
@@ -318,6 +319,7 @@ public class AvaturnLLMDialogManager : MonoBehaviour
 
         _response = uwr.downloadHandler.text;
         Debug.Log("[USER_ANALYSIS] " + _response);
+        TryPatchEmotionalIntensity("User", _response);
     }
 
     IEnumerator LLMRequest(string url, string json)
@@ -339,6 +341,7 @@ public class AvaturnLLMDialogManager : MonoBehaviour
 
         _response = uwr.downloadHandler.text;
         Debug.Log("[LLM_ANALYSIS] " + _response);
+        TryPatchEmotionalIntensity("Agent", _response);
     }
 
     // ---------------------------------------------------------------
@@ -495,6 +498,54 @@ public class AvaturnLLMDialogManager : MonoBehaviour
         return data.ToJsonString();
     }
 
+    private void TryPatchEmotionalIntensity(string role, string rawResponse)
+    {
+        if (logger == null || string.IsNullOrWhiteSpace(rawResponse)) return;
+
+        if (TryExtractEmotionalScore(rawResponse, out int score))
+            logger.PatchLastEmotionalIntensity(role, score);
+    }
+
+    private bool TryExtractEmotionalScore(string rawResponse, out int score)
+    {
+        score = -1;
+        string content = rawResponse;
+
+        string searchKey = "\"content\":\"";
+        int pos = rawResponse.IndexOf(searchKey);
+        if (pos != -1)
+        {
+            int start = pos + searchKey.Length;
+            System.Text.StringBuilder sb = new System.Text.StringBuilder();
+            int i = start;
+            while (i < rawResponse.Length)
+            {
+                if (rawResponse[i] == '\\' && i + 1 < rawResponse.Length && rawResponse[i + 1] == '"')
+                {
+                    sb.Append('"');
+                    i += 2;
+                }
+                else if (rawResponse[i] == '"')
+                {
+                    break;
+                }
+                else
+                {
+                    sb.Append(rawResponse[i]);
+                    i++;
+                }
+            }
+            content = sb.ToString();
+        }
+
+        Match match = Regex.Match(content ?? string.Empty, @"\d+");
+        if (!match.Success || !int.TryParse(match.Value, out score))
+            return false;
+
+        score = Mathf.Clamp(score, 0, 100);
+        return true;
+    }
+
     // ---------------------------------------------------------------
     //  AUDIO — Piper TTS
     // ---------------------------------------------------------------
@@ -513,6 +564,7 @@ public class AvaturnLLMDialogManager : MonoBehaviour
     {
         if (!usePiper)
         {
+            InformationDisplay(text);
 #if UNITY_STANDALONE_WIN
             Narrator.speak(text);
 #else
@@ -537,6 +589,13 @@ public class AvaturnLLMDialogManager : MonoBehaviour
 
         yield return uwr.SendWebRequest();
 
+        if (uwr.result != UnityWebRequest.Result.Success)
+        {
+            Debug.Log("Error While Sending TTS: " + uwr.error);
+            InformationDisplay(text);
+            yield break;
+        }
+
         byte[] wavData = uwr.downloadHandler.data;
         if (usePhonemeGenerator)
         {
@@ -545,6 +604,7 @@ public class AvaturnLLMDialogManager : MonoBehaviour
         }
 
         AudioClip clip = WavUtility.ToAudioClip(wavData, "DownloadedClip");
+        InformationDisplay(text);
         audioSource.clip = clip;
         audioSource.Play();
     }

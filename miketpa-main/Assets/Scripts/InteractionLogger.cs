@@ -20,6 +20,9 @@ public class InteractionLogger : MonoBehaviour
     [Tooltip("Dossier de sortie relatif au dossier Assets (ex: 'Logs/Sessions')")]
     public string OutputFolder = "Logs/Sessions";
 
+    [Tooltip("Libelle exporte dans la colonne Cond. du log Markdown")]
+    public string ConditionLabel = "Adaptive";
+
     private struct TurnRecord
     {
         public int    TurnIndex;
@@ -83,6 +86,7 @@ public class InteractionLogger : MonoBehaviour
             KnowledgeLevel = model.UserKnowledge.ToString(),
             Posture = model.CurrentPosture.ToString(),
             MotivationalProfile = model.ActiveProfile.ToString(),
+            Condition = string.IsNullOrWhiteSpace(ConditionLabel) ? "Adaptive" : ConditionLabel,
             Novelty = model.Novelty,
             Complexity = model.Complexity,
             CopingPotential = model.CopingPotential,

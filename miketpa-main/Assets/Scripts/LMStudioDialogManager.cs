@@ -251,8 +251,6 @@ public class LMStudioDialogManager : MonoBehaviour
         _response  = _response.Substring(pos + 11, endpos);
         _response  = _response.Split("###")[0];
 
-        InformationDisplay(_response);
-
         // Effets non-verbaux encodés dans la réponse (balises émotionnelles)
         _response = ProcessAffectiveContent(_response);
 
@@ -386,21 +384,23 @@ public class LMStudioDialogManager : MonoBehaviour
                      text.Replace(" ", "+") +
                      "&INPUT_TYPE=TEXT&OUTPUT_TYPE=AUDIO&AUDIO=WAVE_FILE&LOCALE=fr&VOICE=" + mary_voice;
         Debug.Log("MaryTTS request: " + req);
-        StartCoroutine(SetAudioClipFromFile(req));
+        StartCoroutine(SetAudioClipFromFile(req, text));
     }
 
-    IEnumerator SetAudioClipFromFile(string path)
+    IEnumerator SetAudioClipFromFile(string path, string displayText)
     {
         using (var www = UnityWebRequestMultimedia.GetAudioClip(path, AudioType.WAV))
         {
             yield return www.SendWebRequest();
             if (www.result == UnityWebRequest.Result.ConnectionError)
             {
+                InformationDisplay(displayText);
                 Debug.LogWarning("MaryTTS unreachable: " + www.error);
                 TryRestartMaryTTS();
             }
             else
             {
+                InformationDisplay(displayText);
                 audioSource.PlayOneShot(DownloadHandlerAudioClip.GetContent(www), volume);
             }
         }

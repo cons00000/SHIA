@@ -58,7 +58,7 @@ Ce gestionnaire implemente le pipeline LM Studio.
 - `HandleUserInput(...)` appelle `model.RecordUserTurn(...)`, puis `logger.LogTurn("User", ...)`.
 - La memoire conversationnelle est une `Queue<string>` avec des tours explicites `Utilisateur:` / `Agent:`.
 - `SendToChat(...)` concatene le preprompt et `BuildDynamicSystemInstructions()`.
-- Apres la reponse LLM, `postRequest(...)` affiche le texte, retire les balises affectives, met a jour le modele avec `RecordAgentTurn(...)`, puis logge `Agent`.
+- Apres la reponse LLM, `postRequest(...)` retire les balises affectives, met a jour le modele avec `RecordAgentTurn(...)`, puis logge `Agent`.
 
 Dans ce pipeline, le `.md` peut donc contenir des lignes `User` et `Agent`.
 
@@ -69,9 +69,7 @@ Ce gestionnaire implemente le pipeline Avaturn avec OpenWebUI ou Ollama.
 - Les tours utilisateur et agent mettent bien a jour `ComputationalModel`.
 - La memoire conversationnelle est une liste JSON `role/content`, pas une `Queue<string>`.
 - `SendToChat(...)` injecte aussi `BuildDynamicSystemInstructions()` dans un message `system`.
-- `ChatRequest(...)` logge les tours `Agent` via `logger.LogTurn("Agent", ...)`.
-
-Difference importante verifiee dans le code : les tours utilisateur appellent `computationalModel.RecordUserTurn(...)`, mais ce gestionnaire ne fait pas d'appel symetrique a `logger.LogTurn("User", ...)`.
+- Les tours `User` sont logges dans les points d'entree utilisateur, et `ChatRequest(...)` logge les tours `Agent`.
 
 ## Fonctionnement reel
 
@@ -86,19 +84,19 @@ Dans `LMStudioDialogManager`, le chemin est le suivant :
 5. le prompt systeme dynamique est reconstruit ;
 6. le message est envoye au LLM.
 
-Dans `AvaturnLLMDialogManager`, le debut est similaire, sauf que le snapshot `User` n'est pas ecrit dans le logger.
+Dans `AvaturnLLMDialogManager`, le debut est similaire et le snapshot `User` est lui aussi ecrit dans le logger.
 
 ### 2. Reponse agent
 
 Dans les deux pipelines, l'ordre est globalement le meme :
 
 1. la reponse LLM est recue ;
-2. le texte est affiche ;
-3. `ProcessAffectiveContent(...)` retire les balises comme `{JOY}`, `{EMPATHY}` ou `{DOUBT}` et declenche les effets non verbaux associes ;
-4. `RecordAgentTurn(...)` met a jour le modele avec la version nettoyee ;
-5. le logger ecrit un snapshot `Agent` si le gestionnaire l'appelle ;
-6. `ApplySchererPosture(...)` applique la posture globale ;
-7. la reponse est ajoutee a la memoire puis envoyee au module audio.
+2. `ProcessAffectiveContent(...)` retire les balises comme `{JOY}`, `{EMPATHY}` ou `{DOUBT}` et declenche les effets non verbaux associes ;
+3. `RecordAgentTurn(...)` met a jour le modele avec la version nettoyee ;
+4. le logger ecrit un snapshot `Agent` si le gestionnaire l'appelle ;
+5. `ApplySchererPosture(...)` applique la posture globale ;
+6. la reponse est ajoutee a la memoire puis envoyee au module audio ;
+7. le texte agent est affiche au moment du demarrage audio, ou immediatement si la synthese vocale echoue.
 
 Il y a donc deux niveaux non verbaux distincts :
 
@@ -168,7 +166,6 @@ Ces contraintes dependent de la longueur du dernier tour utilisateur, du niveau 
 ## Limites actuelles verifiees dans le code
 
 - Le fichier exporte est un Markdown, pas un CSV.
-- La colonne `Cond.` existe dans `TurnRecord`, mais n'est pas renseignee.
-- La colonne `Emo. Int.` existe, mais n'est pas alimentee dans l'etat actuel du code car `PatchLastEmotionalIntensity(...)` n'est appele nulle part.
-- Dans le pipeline Avaturn, les tours utilisateur mettent a jour le modele mais ne sont pas ecrits dans le logger.
-- Le texte peut apparaitre avant la parole de l'agent : l'affichage est fait avant la requete TTS, puis l'audio n'est joue qu'apres reception complete et decodage du WAV.
+- La colonne `Cond.` est remplie a partir de `ConditionLabel` dans `InteractionLogger`.
+- La colonne `Emo. Int.` est alimentee dans le pipeline Avaturn quand la reponse du module d'analyse emotionnelle contient un score exploitable ; elle reste vide dans un pipeline qui ne lance pas cette analyse.
+- L'affichage du texte agent est maintenant aligne sur le demarrage audio, donc il depend lui aussi de la disponibilite de la synthese vocale.

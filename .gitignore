@@ -25,3 +25,7 @@ Thumbs.db
 
 # Fichiers de crash
 *.blob
+
+# Voices
+*.onnx
+*.json

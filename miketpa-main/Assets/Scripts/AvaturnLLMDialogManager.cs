@@ -45,7 +45,7 @@ public class AvaturnLLMDialogManager : MonoBehaviour
     private string _buffer;
 
     // Conversation memory
-    public int numberOfTurn = 10;
+    public int numberOfTurn = 30;
     private JsonParser jsonParser = new JsonParser();
     private JsonValue conversationList = new JsonValue(JsonType.Array);
 
@@ -60,7 +60,7 @@ public class AvaturnLLMDialogManager : MonoBehaviour
 
     // Piper
     public bool usePiper = true;
-    public int piperPort = 5000;
+    public int piperPort = 5001;
     public float speakerID = 1;
     public bool usePhonemeGenerator = false;
 

@@ -110,6 +110,7 @@ public class AvaturnLLMDialogManager : MonoBehaviour
 
         whisper.OnNewSegment += OnNewSegment;
         microphoneRecord.OnRecordStop += OnRecordStop;
+        PlayAudio("Bonjour, je suis Lisa, experte en sommeil. Dis-moi, quelle est ta qualité de sommeil en ce moment ?");
     }
 
     private void DictationRecognizer_DictationComplete(DictationCompletionCause cause)

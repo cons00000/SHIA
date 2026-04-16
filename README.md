@@ -175,11 +175,3 @@ Les sessions sont exportées dans `Assets/Logs/Sessions/interaction_[Participant
 
 > `Time(s)` correspond à `Time.time` Unity, pas à la durée totale d'interaction.  
 > `Emo. Int.` est renseignée uniquement dans le pipeline Avaturn si le module d'analyse émotionnelle retourne un score exploitable.
-
----
-
-## Limites vérifiées dans le code
-
-- Le fichier exporté est un Markdown, pas un CSV.
-- `InteractionLogger` ne calcule aucune métrique : il snapshotte uniquement l'état produit par `ComputationalModel`.
-- L'affichage du texte agent est aligné sur le démarrage audio ; il dépend donc de la disponibilité de la synthèse vocale.
